@@ -13,6 +13,7 @@
  *   RTDB       names/{server}/{lowercase name} = uid         who holds a name
  *   RTDB       profiles/{server}/{uid} = {name, level}       what chat shows
  *   RTDB       devs/{uid}, bans/{uid}                        flags (true or absent)
+ *   RTDB       settings/chat_level = number                  live game settings (Game Settings card)
  */
 "use strict";
 
@@ -394,7 +395,8 @@ function clearCaches() { serverCache = null; charCache = null; }
 async function showServers() {
 	view.innerHTML = `<p class="loading">Loading servers…</p>`;
 	try {
-		const [servers, chars] = await Promise.all([loadServers(), loadCharacters()]);
+		const [servers, chars, settings] = await Promise.all([loadServers(), loadCharacters(), db("GET", "settings").catch(() => null)]);
+		const chatLevel = settings?.chat_level;
 		view.innerHTML = `
 			<div class="toolbar"><h1>Servers</h1><span class="spacer"></span><button class="btn ghost small" id="refresh" type="button">Refresh</button></div>
 			<div class="server-list">${servers.map((s) => `
@@ -403,8 +405,29 @@ async function showServers() {
 					<p class="muted small">id <code>${esc(s.id)}</code>${s.status ? ` · <span class="badge">${esc(s.status)}</span>` : ""}${s.opened_at ? ` · opened ${esc(when(s.opened_at))}` : ""}</p>
 				</div></a>`).join("")}
 			</div>
-			${serverCache === FALLBACK_SERVERS ? `<p class="muted small">No <code>servers</code> documents in Firestore yet, so this is the game's built-in Server 1 (online_config.tres).</p>` : ""}`;
+			${serverCache === FALLBACK_SERVERS ? `<p class="muted small">No <code>servers</code> documents in Firestore yet, so this is the game's built-in Server 1 (online_config.tres).</p>` : ""}
+			<div class="card wide">
+				<h2>Game Settings</h2>
+				<p class="muted small">Live for every server (Realtime Database <code>settings</code>). Games read them at each sign-in.</p>
+				<div class="fields">
+					<label for="set-chat-level">Chat level</label>
+					<input type="number" id="set-chat-level" min="1" max="10000" step="1" value="${esc(chatLevel ?? "")}" placeholder="10 (the game's default)">
+				</div>
+				<p class="muted small">The hero level that opens World chat and private messages. The database refuses World messages from lower levels too. Empty = the game's own default.</p>
+				<button class="btn small" id="save-settings" type="button">Save Settings</button>
+			</div>`;
 		$("#refresh").addEventListener("click", () => { clearCaches(); showServers(); });
+		$("#save-settings").addEventListener("click", async (e) => {
+			const raw = $("#set-chat-level").value.trim();
+			const n = Math.trunc(Number(raw));
+			if (raw !== "" && !(n >= 1 && n <= 10000)) { toast("Chat level must be 1 to 10000.", true); return; }
+			e.target.disabled = true;
+			try {
+				await db("PUT", "settings/chat_level", raw === "" ? null : n);
+				toast(raw === "" ? "Chat level cleared: the game's default applies." : `Chat level set to ${n}.`);
+			} catch (err) { toast(err.message, true); }
+			e.target.disabled = false;
+		});
 	} catch (e) { failed(e); }
 }
 
