@@ -128,3 +128,23 @@ Firebase APIs), and only once a dev signs in.
   `python tools/yarntoss_dev_data.py ../YarnToss`
 - What the panel can edit (`EDITABLE` in `app.js`) must match what the game
   adopts after a dev edit (`CloudSave._adopt_field()` in YarnToss).
+
+## Dev panel (`/dev/idleadventure/`)
+
+A hidden page for the IdleAdventure devs: the servers, each server's players
+(characters, chat names, names held, dev / ban flags), and a player page that
+releases or changes a name, sets Dev / Banned, edits the cloud save (a few
+quick fields or the raw JSON, with a backup download) and restores a cloud
+history copy. Not linked from anywhere and marked `noindex`, but the URL is not
+the protection: everything goes through Firestore and the Realtime Database with
+the dev's own login, and the game's rules only allow it for accounts with
+`admins/{uid}` in both (the IdleAdventure repo's `firebase/` rules and
+`docs/multiplayer.md`, "Dev panel", which also has the one-time setup). Like
+the YarnToss panel, it only talks to Google's Firebase APIs once a dev signs in.
+
+- Sign in with the **email and password** of an admin account (guest and Play
+  Games accounts can't sign in on the web).
+- A save edit raises `save_counter` by 1000 so the player's game takes it at
+  its next launch; edit while that player's game is closed, or the running game
+  overwrites it. Change `COUNTER_BUMP` / `encodeSave()` in `app.js` together
+  with the game's `OnlineRules` if the save document's shape changes.

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>IdleAdventure Dev Panel</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<!--
+	IdleAdventure dev panel. Not linked from anywhere; the Firebase rules
+	(isAdmin() in the IdleAdventure repo's firebase/firestore.rules, and
+	admins/{uid} in firebase/database.rules.json) are what protect the data,
+	not this URL. See README.md "Dev panel".
+-->
+<header class="top">
+	<div class="bar">
+		<a class="brand" href="#/servers"><img src="/idleadventure/img/icon.webp" alt="" width="28" height="28">IdleAdventure <span>Dev</span></a>
+		<nav id="nav" hidden>
+			<a href="#/servers" data-view="servers">Servers</a>
+		</nav>
+		<div class="who" id="who" hidden><span id="who-name"></span><button class="link" id="sign-out" type="button">Sign out</button></div>
+	</div>
+</header>
+
+<main id="main">
+	<section id="signin" class="signin" hidden>
+		<h1>Dev sign-in</h1>
+		<p class="muted">Use the email and password of an IdleAdventure admin account (<code>admins/{uid}</code> in Firestore and the Realtime Database).</p>
+		<form id="signin-form">
+			<label>Email <input type="email" name="email" autocomplete="username" required></label>
+			<label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+			<button class="btn" type="submit">Sign In</button>
+			<p class="error" id="signin-error" role="alert"></p>
+		</form>
+	</section>
+	<div id="view"></div>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
