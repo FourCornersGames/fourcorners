@@ -13,7 +13,7 @@
  *   RTDB       names/{server}/{lowercase name} = uid         who holds a name
  *   RTDB       profiles/{server}/{uid} = {name, level}       what chat shows
  *   RTDB       devs/{uid}, bans/{uid}                        flags (true or absent)
- *   RTDB       settings/chat_level = number                  live game settings (Game Settings card)
+ *   RTDB       settings/chat_level, min_version_code         live game settings (Game Settings card; forced updates)
  *   RTDB       chat/{server}/system, chat/{server}/removed   announcements, and ids of deleted messages
  *   RTDB       avatars/pending|approved/{uid}, mail/{uid}    avatar review; letters to a player's in-game Mail
  */
@@ -400,6 +400,7 @@ async function showServers() {
 	try {
 		const [servers, chars, settings] = await Promise.all([loadServers(), loadCharacters(), db("GET", "settings").catch(() => null)]);
 		const chatLevel = settings?.chat_level;
+		const minCode = settings?.min_version_code;
 		view.innerHTML = `
 			<div class="toolbar"><h1>Servers</h1><span class="spacer"></span><button class="btn ghost small" id="refresh" type="button">Refresh</button></div>
 			<div class="server-list">${servers.map((s) => `
@@ -417,6 +418,11 @@ async function showServers() {
 					<input type="number" id="set-chat-level" min="1" max="10000" step="1" value="${esc(chatLevel ?? "")}" placeholder="10 (the game's default)">
 				</div>
 				<p class="muted small">The hero level that opens World chat and private messages. The database refuses World messages from lower levels too. Empty = the game's own default.</p>
+				<div class="fields">
+					<label for="set-min-code">Minimum build</label>
+					<input type="number" id="set-min-code" min="0" step="1" value="${esc(minCode ?? "")}" placeholder="none">
+				</div>
+				<p class="muted small">Forces an update: Play Store builds with a lower version code (e.g. 108) show "Update Required" and can't be played until updated. Raise it only after the new build is live on the track. Empty or 0 = no minimum. Debug, desktop and sideloaded builds are never blocked.</p>
 				<button class="btn small" id="save-settings" type="button">Save Settings</button>
 			</div>
 			<div class="card wide">
@@ -472,10 +478,14 @@ async function showServers() {
 			const raw = $("#set-chat-level").value.trim();
 			const n = Math.trunc(Number(raw));
 			if (raw !== "" && !(n >= 1 && n <= 10000)) { toast("Chat level must be 1 to 10000.", true); return; }
+			const rawCode = $("#set-min-code").value.trim();
+			const code = Math.trunc(Number(rawCode));
+			if (rawCode !== "" && !(code >= 0)) { toast("Minimum build must be 0 or more.", true); return; }
+			if (rawCode !== "" && code > 0 && code !== (minCode || 0) && !confirm(`Force every Play build below ${code} to update before playing?`)) return;
 			e.target.disabled = true;
 			try {
-				await db("PUT", "settings/chat_level", raw === "" ? null : n);
-				toast(raw === "" ? "Chat level cleared: the game's default applies." : `Chat level set to ${n}.`);
+				await db("PATCH", "settings", { chat_level: raw === "" ? null : n, min_version_code: rawCode === "" || code === 0 ? null : code });
+				toast("Settings saved.");
 			} catch (err) { toast(err.message, true); }
 			e.target.disabled = false;
 		});
