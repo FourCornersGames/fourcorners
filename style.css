@@ -118,6 +118,39 @@
 	}
 }
 
+/* IdleAdventure: a storybook fantasy look: parchment, forest green, the
+   heroes' crimson and a gold title, in Baloo 2. */
+.theme-idleadventure {
+	--bg: #fbf7ee;
+	--surface: #f1ead9;
+	--card: #fffdf7;
+	--fg: #26231d;
+	--muted: #6a6253;
+	--line: #e4dac4;
+	--accent: #2f6b4a;
+	--accent-soft: #e2efe5;
+	--on-accent: #ffffff;
+	--pop: #f4c64e;
+	--ink: #2a1d12;
+	--go: #b8402f;
+	--go-shade: #8a2c20;
+	--shadow: 0 1px 2px rgb(50 40 20 / 0.08), 0 14px 34px -14px rgb(50 40 20 / 0.3);
+	--display: "Baloo 2", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+	.theme-idleadventure {
+		--bg: #15181a;
+		--surface: #1c2123;
+		--card: #212729;
+		--fg: #ece6d8;
+		--muted: #a9a291;
+		--line: #2f3638;
+		--accent: #8fd1a6;
+		--accent-soft: #1f3328;
+		--on-accent: #15181a;
+	}
+}
+
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 84px; }
 body {
@@ -133,7 +166,8 @@ a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness:
 a:hover { text-decoration-thickness: 2px; }
 h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; letter-spacing: -0.015em; margin: 0; }
 .theme-yarntoss h1, .theme-yarntoss h2, .theme-yarntoss h3,
-.theme-catcafe h1, .theme-catcafe h2, .theme-catcafe h3 { font-weight: 800; letter-spacing: 0; }
+.theme-catcafe h1, .theme-catcafe h2, .theme-catcafe h3,
+.theme-idleadventure h1, .theme-idleadventure h2, .theme-idleadventure h3 { font-weight: 800; letter-spacing: 0; }
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
 .skip { position: absolute; left: -999px; top: 8px; background: var(--card); padding: 8px 14px; border-radius: 8px; z-index: 20; }
 .skip:focus { left: 8px; }
@@ -441,6 +475,20 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 .stage.wide .cat { width: 30%; left: -10%; bottom: -26%; }
 .stage .treat { position: absolute; width: 22%; right: -3%; top: -17%; filter: drop-shadow(0 8px 10px rgb(60 30 10 / 0.25)); animation: spin 6s ease-in-out infinite; }
 
+/* IdleAdventure: a framed storybook picture of the heroes facing the
+   monsters, with the knight in front and the dragon bobbing. */
+.storyframe {
+	position: relative;
+	border-radius: 20px;
+	padding: 10px;
+	background: #6b4a2e;
+	box-shadow: 0 30px 60px -20px rgb(40 30 10 / 0.5), inset 0 0 0 2px #4a311d, inset 0 -6px 0 #563a22;
+	transform: rotate(-2deg);
+	animation: float-l 6s ease-in-out infinite;
+}
+.storyframe img { border-radius: 12px; aspect-ratio: 1024 / 500; width: 100%; object-fit: cover; }
+.stage.wide .hero-knight { position: absolute; width: 26%; left: -9%; bottom: -30%; filter: drop-shadow(0 10px 12px rgb(40 30 10 / 0.3)); animation: pounce 3.4s ease-in-out infinite; }
+
 /* landscape screenshots, two side by side (one a row on phones) */
 .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .shots figure { margin: 0; }
@@ -539,7 +587,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 .doc h1 { font-size: clamp(2rem, 5vw, 2.7rem); }
 .doc .meta { margin: 10px 0 28px; color: var(--muted); font-size: 0.9rem; }
 .doc h2 { font-size: 1.3rem; margin: 2.4rem 0 0.4rem; }
-.theme-yarntoss .doc h2, .theme-catcafe .doc h2 { font-size: 1.4rem; }
+.theme-yarntoss .doc h2, .theme-catcafe .doc h2, .theme-idleadventure .doc h2 { font-size: 1.4rem; }
 .doc .callout + h2 { margin-top: 2.2rem; }
 .doc p { margin: 0.7rem 0; }
 .doc ul, .doc ol { padding-left: 1.25rem; margin: 0.6rem 0; }
@@ -566,7 +614,7 @@ footer.site .cols {
 	margin: 0 auto;
 	padding: 44px 24px 24px;
 	display: grid;
-	grid-template-columns: 1.3fr repeat(3, 1fr) auto;
+	grid-template-columns: 1.3fr repeat(4, 1fr) auto;
 	gap: 28px;
 }
 footer.site h3 { font-family: var(--body); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg); margin-bottom: 12px; }
@@ -589,6 +637,7 @@ footer.site .base { max-width: var(--max); margin: 0 auto; padding: 18px 24px 40
 	.stage .cat { left: -30%; }
 	.stage.wide { margin-bottom: 56px; }
 	.stage.wide .cat { left: -4%; }
+	.stage.wide .hero-knight { left: -2%; }
 }
 @media (max-width: 640px) {
 	body { font-size: 16.5px; }

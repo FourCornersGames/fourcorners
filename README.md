@@ -20,6 +20,11 @@ each links to its other-language twin.
 /fr/catcafe/           French game page
 /fr/catcafe/confidentialite.html, conditions.html, supprimer-compte.html
 /catcafe/img/          CatCafe art (webp), made from the game's own PNGs
+/idleadventure/        IdleAdventure game page
+/idleadventure/privacy.html, terms.html, delete-account.html
+/fr/idleadventure/     French game page
+/fr/idleadventure/confidentialite.html, conditions.html, supprimer-compte.html
+/idleadventure/img/    IdleAdventure art (webp), made from the game's own original art
 /assets/fonts/         self-hosted Lato (studio) and Baloo 2 (YarnToss), with their OFL licences
 /brand/                logo files and the logo animation script
 /404.html
@@ -64,6 +69,24 @@ milestone; update them if what ships differs. There is no store listing art
 yet: `catcafe/img/` is the app icon, characters and the village picture from
 `assets/art/` in the game's repo, and `feature.webp` / `og.jpg` are made from
 them. Swap in real screenshots and the feature graphic once they exist.
+
+## IdleAdventure
+
+IdleAdventure is the fantasy idle RPG (`ca.fourcornersgames.idleadventure`,
+Firebase project `idleadventure-fcg`, repo `../IdleAdventure`). Its privacy
+policy describes what the game does as of November 2026: anonymous Firebase
+accounts, one cloud save per server with five older copies (Firestore, US),
+random hero names, World / System chat and private messages with block and
+report (Realtime Database, US), Google Play Games linking, and server time.
+Purchases (Google Play) and rewarded ads (AdMob with Google's consent form)
+are described as coming; update the pages when they ship, and when rankings,
+Families or the Arena make more of a player visible to others. The
+delete-account page describes Settings -> Account -> Delete Account; the game
+must have that button before the page is used in Play Console's Data safety
+form. There is no store art yet: `idleadventure/img/` holds the hero rigs,
+creatures, a familiar and a hunting ground from the game's own original art
+(never third-party sprites), and `feature.webp` / `og.jpg` are made from them.
+Swap in the real feature graphic and screenshots once they exist.
 
 ## Game art
 
