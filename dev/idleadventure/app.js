@@ -14,6 +14,8 @@
  *   RTDB       profiles/{server}/{uid} = {name, level}       what chat shows
  *   RTDB       devs/{uid}, bans/{uid}                        flags (true or absent)
  *   RTDB       settings/chat_level = number                  live game settings (Game Settings card)
+ *   RTDB       chat/{server}/system, chat/{server}/removed   announcements, and ids of deleted messages
+ *   RTDB       avatars/pending|approved/{uid}, mail/{uid}    avatar review; letters to a player's in-game Mail
  */
 "use strict";
 
@@ -312,12 +314,13 @@ function route() {
 	if (!auth.uid) return;
 	const [, name = "servers", a = "", b = ""] = location.hash.split("/");
 	document.querySelectorAll("#nav a").forEach((el) => {
-		if (el.dataset.view === "servers") el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current");
+		if (el.dataset.view === (name === "avatars" ? "avatars" : "servers")) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current");
 	});
 	leaveGuard = null;
 	window.scrollTo(0, 0);
 	if (name === "server" && a) showServer(decodeURIComponent(a));
 	else if (name === "player" && a && b) showPlayer(decodeURIComponent(a), decodeURIComponent(b));
+	else if (name === "avatars") showAvatars();
 	else showServers();
 }
 
@@ -415,7 +418,55 @@ async function showServers() {
 				</div>
 				<p class="muted small">The hero level that opens World chat and private messages. The database refuses World messages from lower levels too. Empty = the game's own default.</p>
 				<button class="btn small" id="save-settings" type="button">Save Settings</button>
+			</div>
+			<div class="card wide">
+				<h2>Announcement</h2>
+				<p class="muted small">Posts to the System channel of the game's chat on one server, as "Announcement". Players see it within a minute.</p>
+				<div class="fields">
+					<label for="ann-server">Server</label>
+					<select id="ann-server">${servers.map((s) => `<option value="${esc(s.id)}">${esc(s.name || s.id)}</option>`).join("")}</select>
+				</div>
+				<textarea id="ann-text" maxlength="500" placeholder="Message (up to 500 characters)"></textarea>
+				<button class="btn small" id="ann-send" type="button">Send Announcement</button>
+				<h3>Recent</h3>
+				<div id="ann-list"><p class="muted small">Loading…</p></div>
 			</div>`;
+		const loadAnnouncements = async () => {
+			const server = $("#ann-server").value;
+			const box = $("#ann-list");
+			try {
+				const msgs = await db("GET", `chat/${server}/system`) || {};
+				const ids = Object.keys(msgs).sort().reverse().slice(0, 10);
+				box.innerHTML = ids.length ? ids.map((id) => `
+					<div class="ann-row"><span class="muted small">${esc(when(Math.floor((msgs[id].ts || 0) / 1000)))}</span>
+					<span>${esc(msgs[id].text)}</span>
+					<button class="btn ghost small" data-del="${esc(id)}" type="button">Delete</button></div>`).join("") : `<p class="muted small">No announcements on this server.</p>`;
+				box.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", async () => {
+					if (!confirm("Delete this announcement for everyone?")) return;
+					try {
+						await db("PATCH", "", { [`chat/${server}/system/${b.dataset.del}`]: null, [`chat/${server}/removed/${b.dataset.del}`]: { ".sv": "timestamp" } });
+						toast("Announcement deleted.");
+						loadAnnouncements();
+					} catch (err) { toast(err.message, true); }
+				}));
+			} catch (err) { box.innerHTML = `<p class="error">${esc(err.message)}</p>`; }
+		};
+		$("#ann-server").addEventListener("change", loadAnnouncements);
+		loadAnnouncements();
+		$("#ann-send").addEventListener("click", async (e) => {
+			const text = $("#ann-text").value.trim();
+			if (!text) { toast("Write the announcement first.", true); return; }
+			const server = $("#ann-server").value;
+			if (!confirm(`Send this announcement to everyone on ${server}?`)) return;
+			e.target.disabled = true;
+			try {
+				await db("POST", `chat/${server}/system`, { uid: auth.uid, name: "Announcement", text, ts: { ".sv": "timestamp" } });
+				$("#ann-text").value = "";
+				toast("Announcement sent.");
+				loadAnnouncements();
+			} catch (err) { toast(err.message, true); }
+			e.target.disabled = false;
+		});
 		$("#refresh").addEventListener("click", () => { clearCaches(); showServers(); });
 		$("#save-settings").addEventListener("click", async (e) => {
 			const raw = $("#set-chat-level").value.trim();
@@ -428,6 +479,50 @@ async function showServers() {
 			} catch (err) { toast(err.message, true); }
 			e.target.disabled = false;
 		});
+	} catch (e) { failed(e); }
+}
+
+// --- Avatar review -----------------------------------------------------------
+// Players send a picture from the game's Account page (avatars/pending/{uid} = {data: base64 JPEG, name, ts}).
+// Approve moves it to avatars/approved/{uid} (shown on their chat messages); both answers go to mail/{uid}, which
+// the game turns into an in-game Mail letter.
+
+async function showAvatars() {
+	view.innerHTML = `<p class="loading">Loading avatars…</p>`;
+	try {
+		const pending = await db("GET", "avatars/pending") || {};
+		const uids = Object.keys(pending).sort((x, y) => (pending[x].ts || 0) - (pending[y].ts || 0));
+		view.innerHTML = `
+			<div class="toolbar"><h1>Avatars</h1><span class="count">${fmt(uids.length)} waiting</span><span class="spacer"></span><button class="btn ghost small" id="refresh" type="button">Refresh</button></div>
+			${uids.length ? "" : `<div class="card"><p class="muted">No avatars waiting for review.</p></div>`}
+			<div class="avatar-grid">${uids.map((uid) => `
+				<div class="card avatar-card">
+					<img src="data:image/jpeg;base64,${esc(pending[uid].data)}" alt="" width="128" height="128">
+					<div><strong>${esc(pending[uid].name || "?")}</strong><br><code class="small">${esc(uid)}</code><br><span class="muted small">${esc(when(Math.floor((pending[uid].ts || 0) / 1000)))}</span></div>
+					<input type="text" maxlength="200" placeholder="Reason (sent with a denial)" data-reason="${esc(uid)}">
+					<div class="row"><button class="btn small" data-approve="${esc(uid)}" type="button">Approve</button>
+					<button class="btn ghost small" data-deny="${esc(uid)}" type="button">Deny</button></div>
+				</div>`).join("")}</div>`;
+		$("#refresh").addEventListener("click", showAvatars);
+		const mailId = () => `m${Date.now()}${Math.floor(Math.random() * 1000)}`;
+		const decide = async (uid, approve, btn) => {
+			btn.disabled = true;
+			const reason = view.querySelector(`[data-reason="${CSS.escape(uid)}"]`).value.trim();
+			const up = { [`avatars/pending/${uid}`]: null };
+			if (approve) {
+				up[`avatars/approved/${uid}`] = pending[uid].data;
+				up[`mail/${uid}/${mailId()}`] = { title: "Avatar Approved", body: "Your new avatar was approved. It now shows on your chat messages.", ts: { ".sv": "timestamp" } };
+			} else {
+				up[`mail/${uid}/${mailId()}`] = { title: "Avatar Not Approved", body: `Your avatar wasn't approved${reason ? `: ${reason}` : "."} You can choose another picture on the Account page.`, ts: { ".sv": "timestamp" } };
+			}
+			try {
+				await db("PATCH", "", up);
+				toast(approve ? "Approved; the player gets a letter." : "Denied; the player gets a letter.");
+				showAvatars();
+			} catch (err) { toast(err.message, true); btn.disabled = false; }
+		};
+		view.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.approve, true, b)));
+		view.querySelectorAll("[data-deny]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.deny, false, b)));
 	} catch (e) { failed(e); }
 }
 

@@ -205,3 +205,9 @@ textarea.code { font: 12.5px/1.45 ui-monospace, monospace; min-height: 420px; wh
 .server-list .card:hover { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow); }
 .crumbs { margin-bottom: 10px; font-size: 14px; }
 .player-head .spacer { flex: 1; }
+
+.ann-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line, rgba(255,255,255,.08)); }
+.avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.avatar-card { display: grid; gap: 8px; justify-items: start; }
+.avatar-card img { border-radius: 50%; border: 3px solid var(--accent); }
+.avatar-card .row { display: flex; gap: 8px; }
