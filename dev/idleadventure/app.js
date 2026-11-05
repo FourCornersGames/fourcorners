@@ -32,6 +32,7 @@ const QUICK = [
 	["game_state.hero.level", "Hero level"],
 	["game_state.currencies.gold", "Gold"],
 	["game_state.currencies.gems", "Gems"],
+	["game_state.crowns.balance", "Crowns"],
 	["game_state.currencies.spell_scrolls", "Spell Scrolls"],
 	["game_state.currencies.ore", "Ore"],
 ];
