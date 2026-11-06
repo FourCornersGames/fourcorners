@@ -149,12 +149,6 @@ function friendlyAuthError(code) {
 	return code;
 }
 
-async function signIn(email, password) {
-	const data = await postJson(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
-		{ email, password, returnSecureToken: true });
-	setSession(data.localId, data.idToken, data.refreshToken, data.expiresIn);
-}
-
 function setSession(uid, idToken, refreshToken, expiresIn) {
 	Object.assign(auth, { uid, idToken, refreshToken, expiresAt: Date.now() + (Number(expiresIn) - 60) * 1000 });
 	store("session", "yt-dev-refresh", refreshToken);
@@ -169,11 +163,17 @@ async function token() {
 	return auth.idToken;
 }
 
+// Sign out of every game's panel (the gateway's sessions too) and go back to the gateway (/dev/).
+function signOutEverywhere() {
+	try {
+		for (const k of Object.keys(sessionStorage)) if (/^(ia|yt|bk)-dev-|^dev-/.test(k)) sessionStorage.removeItem(k);
+	} catch (_) { /* Storage blocked: nothing kept anyway. */ }
+	location.href = "/dev/";
+}
+
 function signOut() {
 	Object.assign(auth, { uid: "", idToken: "", refreshToken: "", expiresAt: 0, name: "" });
-	store("session", "yt-dev-refresh", null);
-	location.hash = "";
-	boot();
+	signOutEverywhere();
 }
 
 // --- Firestore REST ------------------------------------------------------
@@ -239,7 +239,8 @@ async function boot() {
 	view.innerHTML = "";
 	auth.refreshToken = auth.refreshToken || store("session", "yt-dev-refresh") || "";
 	if (!auth.refreshToken) {
-		$("#signin").hidden = false;
+		// One sign-in for every game: the gateway (/dev/) signs in and comes back here.
+		location.replace("/dev/#yarntoss");
 		return;
 	}
 	view.innerHTML = `<p class="loading">Signing in…</p>`;
@@ -295,21 +296,6 @@ window.addEventListener("beforeunload", (e) => {
 	if (leaveGuard && leaveGuard()) e.preventDefault();
 });
 
-$("#signin-form").addEventListener("submit", async (e) => {
-	e.preventDefault();
-	const form = e.target;
-	$("#signin-error").textContent = "";
-	form.querySelector("button").disabled = true;
-	try {
-		await signIn(form.email.value.trim(), form.password.value);
-		form.password.value = "";
-		boot();
-	} catch (err) {
-		$("#signin-error").textContent = err.message;
-	} finally {
-		form.querySelector("button").disabled = false;
-	}
-});
 $("#sign-out").addEventListener("click", signOut);
 
 function failed(e) {

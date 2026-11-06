@@ -17,6 +17,7 @@
 -->
 <header class="top">
 	<div class="bar">
+		<a class="btn ghost small" href="/dev/" title="Pick another game">All Games</a>
 		<a class="brand" href="#/leaderboard"><img src="/yarntoss/img/icon.webp" alt="" width="28" height="28">YarnToss <span>Dev</span></a>
 		<nav id="nav" hidden>
 			<a href="#/leaderboard" data-view="leaderboard">Leaderboard</a>
@@ -31,13 +32,9 @@
 <main id="main">
 	<section id="signin" class="signin" hidden>
 		<h1>Dev sign-in</h1>
-		<p class="muted">Use the email and password of a YarnToss account with <code>is_dev</code> set.</p>
-		<form id="signin-form">
-			<label>Email <input type="email" name="email" autocomplete="username" required></label>
-			<label>Password <input type="password" name="password" autocomplete="current-password" required></label>
-			<button class="btn" type="submit">Sign in</button>
-			<p class="error" id="signin-error" role="alert"></p>
-		</form>
+		<p class="muted">Sign in once for every game on the <a href="/dev/">Four Corners Dev</a> page.</p>
+		<p class="error" id="signin-error" role="alert"></p>
+		<a class="btn" href="/dev/#yarntoss">Go to Dev Sign-In</a>
 	</section>
 	<div id="view"></div>
 </main>

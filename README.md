@@ -109,6 +109,35 @@ YarnToss uses:
   10 minutes). Needs the plain webhook URL (no `/github`) as the
   `DISCORD_WEBHOOK_URL` repo secret; without it the workflow does nothing.
 
+## Dev panels: the gateway (`/dev/`)
+
+`/dev/` is the way into every game's dev panel (Jay, 2026-11-06). **One
+sign-in**: the email and password are tried on each game's own Firebase project
+at once (each game has its own accounts), each game's own rules decide whether
+that account is a dev there, and a card per game says **Open** or why not ("no
+account with this email and password", "not a dev here yet: needs ..."). Each
+game's session is kept in `sessionStorage` under the keys its panel already
+reads (`ia-dev-*`, `yt-dev-*`, `bk-dev-*`), so a panel opens signed in. A panel
+with no session sends you to `/dev/#<game>` and comes back after sign-in;
+**Sign out** in any panel signs out of all of them; every panel has an
+**All Games** link. For one sign-in to open every game, give your dev account
+the **same email and password** in each game's Firebase project. To add a game:
+a `GAMES` entry in `dev/gateway.js` (public API key, project, panel path,
+sessionStorage keys, how it decides who is a dev). The gateway borrows the
+IdleAdventure panel's stylesheet.
+
+## Dev panel (`/dev/bakery/`, CatCafe)
+
+Read-only for now: the players (each one's `players/{uid}` summary, newest
+first, with a search), a player page (the summary, the cloud save's stars,
+coins, device and version, the whole save as JSON, a backup download) and
+`config/app`. Editing waits for the game to adopt dev edits (its CloudSave
+keeps the phone's copy over a web edit, Bakery `docs/CLOUD_SAVE.md`). The
+Bakery repo's rules give `isDev()` accounts (`devs/{uid}` with `enabled: true`)
+read access to `players/`, `saves/`, `names/` and `devs/` (branch
+`JL-dev-panel-rules`). CatCafe needs **Email/Password sign-in switched on**
+(Authentication → Sign-in method) and a dev login with a `devs/{uid}` document.
+
 ## Dev panel (`/dev/yarntoss/`)
 
 A hidden page for the YarnToss devs: both leaderboards, every player's full

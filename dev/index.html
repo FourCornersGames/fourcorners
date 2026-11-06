@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Four Corners Dev</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/dev/idleadventure/app.css">
+<link rel="stylesheet" href="gateway.css">
+</head>
+<body>
+<!--
+	The way into every game's dev panel (README.md "Dev panels"). One sign-in:
+	the email and password are tried on each game's own Firebase project, and
+	each game's own rules decide whether that account is a dev there. Not linked
+	from anywhere; the rules protect the data, not this URL.
+-->
+<header class="top">
+	<div class="bar">
+		<a class="brand" href="/dev/"><img src="/favicon.svg" alt="" width="28" height="28">Four Corners <span>Dev</span></a>
+		<div class="who" id="who" hidden><span id="who-name"></span><button class="link" id="sign-out" type="button">Sign out</button></div>
+	</div>
+</header>
+
+<main id="main">
+	<section id="signin" class="signin" hidden>
+		<h1>Dev sign-in</h1>
+		<p class="muted">One sign-in for every game's dev panel. Use the email and password of your dev account: it is tried on each game, and each game checks that the account is a dev there.</p>
+		<form id="signin-form">
+			<label>Email <input type="email" name="email" autocomplete="username" required></label>
+			<label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+			<button class="btn" type="submit">Sign In</button>
+			<p class="error" id="signin-error" role="alert"></p>
+		</form>
+	</section>
+	<section id="games" hidden>
+		<h1>Pick a game</h1>
+		<p class="muted" id="games-note"></p>
+		<div class="games" id="game-list"></div>
+	</section>
+</main>
+
+<script src="gateway.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+/* Four Corners Dev gateway: the game picker on top of the IdleAdventure panel's styles. */
+
+.games { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); margin-top: 18px; }
+.game { display: flex; flex-direction: column; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+.game-head { display: flex; align-items: center; gap: 12px; }
+.game-head img { border-radius: 12px; }
+.game-head h2 { margin: 0; font-size: 22px; }
+.game .status { min-height: 2.6em; }
+.game.off { opacity: .7; }
+.game .btn { align-self: flex-start; text-decoration: none; }
+.game .status.bad { color: var(--bad); }
+.game .status.ok { color: var(--ok); }
+.back { margin-right: 4px; }

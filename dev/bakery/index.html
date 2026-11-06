@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>CatCafe Dev Panel</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/dev/idleadventure/app.css">
+</head>
+<body>
+<!--
+	CatCafe (the Bakery repo) dev panel. Not linked from anywhere; the Firestore
+	rules (isDev() in the Bakery repo's firebase/firestore.rules: a devs/{uid}
+	document with enabled: true) are what protect the data, not this URL.
+	See README.md "Dev panels". Read-only for now.
+-->
+<header class="top">
+	<div class="bar">
+		<a class="btn ghost small" href="/dev/" title="Pick another game">All Games</a>
+		<a class="brand" href="#/players"><img src="/catcafe/img/icon.webp" alt="" width="28" height="28">CatCafe <span>Dev</span></a>
+		<nav id="nav" hidden>
+			<a href="#/players" data-view="players">Players</a>
+			<a href="#/config" data-view="config">Config</a>
+		</nav>
+		<div class="who" id="who" hidden><span id="who-name"></span><button class="link" id="sign-out" type="button">Sign out</button></div>
+	</div>
+</header>
+
+<main id="main">
+	<section id="signin" class="signin" hidden>
+		<h1>Dev sign-in</h1>
+		<p class="muted">Sign in once for every game on the <a href="/dev/">Four Corners Dev</a> page.</p>
+		<p class="error" id="signin-error" role="alert"></p>
+		<a class="btn" href="/dev/#bakery">Go to Dev Sign-In</a>
+	</section>
+	<div id="view"></div>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
