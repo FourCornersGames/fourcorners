@@ -14,7 +14,8 @@
  *   RTDB       profiles/{server}/{uid} = {name, level}       what chat shows
  *   RTDB       devs/{uid}, bans/{uid}                        flags (true or absent)
  *   RTDB       settings/chat_level, min_version_code         live game settings (Game Settings card; forced updates)
- *   RTDB       chat/{server}/system, chat/{server}/removed   announcements, and ids of deleted messages
+ *   RTDB       chat/{server}/system                          announcements
+ *   RTDB       chat/{server}/world refresh markers           {uid, ts, refresh: true}: Refresh Chat (games reload chat)
  *   RTDB       avatars/pending|approved/{uid}, mail/{uid}    avatar review; letters to a player's in-game Mail
  */
 "use strict";
@@ -436,6 +437,15 @@ async function showServers() {
 				<button class="btn small" id="ann-send" type="button">Send Announcement</button>
 				<h3>Recent</h3>
 				<div id="ann-list"><p class="muted small">Loading…</p></div>
+			</div>
+			<div class="card wide">
+				<h2>Refresh Chat</h2>
+				<p class="muted small">After deleting World or System messages in the Firebase console, press this: every game on the server reloads its chat at its next check (within a minute) and the deleted messages disappear. Deleting in the game (press and hold, as a dev) and deleting an announcement here do it on their own.</p>
+				<div class="fields">
+					<label for="refresh-server">Server</label>
+					<select id="refresh-server">${servers.map((s) => `<option value="${esc(s.id)}">${esc(s.name || s.id)}</option>`).join("")}</select>
+				</div>
+				<button class="btn small" id="refresh-chat" type="button">Refresh Chat</button>
 			</div>`;
 		const loadAnnouncements = async () => {
 			const server = $("#ann-server").value;
@@ -450,7 +460,8 @@ async function showServers() {
 				box.querySelectorAll("[data-del]").forEach((b) => b.addEventListener("click", async () => {
 					if (!confirm("Delete this announcement for everyone?")) return;
 					try {
-						await db("PATCH", "", { [`chat/${server}/system/${b.dataset.del}`]: null, [`chat/${server}/removed/${b.dataset.del}`]: { ".sv": "timestamp" } });
+						await db("DELETE", `chat/${server}/system/${b.dataset.del}`);
+						await refreshChat(server);
 						toast("Announcement deleted.");
 						loadAnnouncements();
 					} catch (err) { toast(err.message, true); }
@@ -473,6 +484,15 @@ async function showServers() {
 			} catch (err) { toast(err.message, true); }
 			e.target.disabled = false;
 		});
+		$("#refresh-chat").addEventListener("click", async (e) => {
+			const server = $("#refresh-server").value;
+			e.target.disabled = true;
+			try {
+				await refreshChat(server);
+				toast(`Chat on ${server} will reload in every game within a minute.`);
+			} catch (err) { toast(err.message, true); }
+			e.target.disabled = false;
+		});
 		$("#refresh").addEventListener("click", () => { clearCaches(); showServers(); });
 		$("#save-settings").addEventListener("click", async (e) => {
 			const raw = $("#set-chat-level").value.trim();
@@ -490,6 +510,13 @@ async function showServers() {
 			e.target.disabled = false;
 		});
 	} catch (e) { failed(e); }
+}
+
+// Refresh Chat: a marker in World chat ({uid, ts, refresh: true}, no text, never shown). Every game already polls World
+// for new messages, sees the marker and reloads World / System from scratch, dropping deleted messages. Only admins
+// and devs may post one (the game's database.rules.json; IdleAdventure docs/multiplayer.md "Refresh Chat").
+async function refreshChat(server) {
+	await db("POST", `chat/${server}/world`, { uid: auth.uid, ts: { ".sv": "timestamp" }, refresh: true });
 }
 
 // --- Avatar review -----------------------------------------------------------
