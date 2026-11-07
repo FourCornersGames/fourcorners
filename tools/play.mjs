@@ -4,7 +4,8 @@
 //   node tools/play.mjs check                 every app: can we open an edit, and what is on each track
 //   node tools/play.mjs tracks <app>          releases on every track
 //   node tools/play.mjs listing <app> [lang]  store listing text (default en-US)
-//   node tools/play.mjs reviews <app>         recent reviews (last 7 days, API limit)
+//   node tools/play.mjs info [app]            app details + title/short description in every listing language
+//   node tools/play.mjs reviews <app>        recent reviews (last 7 days, API limit)
 //   node tools/play.mjs get <path>            raw GET under /androidpublisher/v3/applications/
 //
 // <app> is a short name below or a full package name.
@@ -106,6 +107,18 @@ try {
 				} catch (e) {
 					console.log(`FAIL ${name} (${p}): ${e.message}`);
 				}
+			}
+			break;
+		case 'info':
+			for (const [name, p] of Object.entries(APPS)) {
+				if (arg && pkg(arg) !== p) continue;
+				await withEdit(p, async (id) => {
+					const d = await api('GET', `${p}/edits/${id}/details`);
+					const ls = (await api('GET', `${p}/edits/${id}/listings`)).listings || [];
+					console.log(`== ${name} (${p})`);
+					console.log(`   default ${d.defaultLanguage}  email ${d.contactEmail || '-'}  web ${d.contactWebsite || '-'}  phone ${d.contactPhone || '-'}`);
+					for (const l of ls) console.log(`   ${l.language.padEnd(6)} "${l.title}" | ${l.shortDescription}`);
+				});
 			}
 			break;
 		case 'tracks':
