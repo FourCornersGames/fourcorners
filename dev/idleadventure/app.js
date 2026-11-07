@@ -1,9 +1,9 @@
-/* IdleAdventure dev panel.
+/* Pocket Quest dev panel.
  *
  * Talks to Firebase Auth, Firestore and the Realtime Database over their REST
  * APIs, the same way the game does (no SDK, nothing loaded from a third party).
  * Every read and write is checked by the game's Firebase rules: isAdmin() in
- * the IdleAdventure repo's firebase/firestore.rules (an admins/{uid} document)
+ * the Pocket Quest repo's firebase/firestore.rules (an admins/{uid} document)
  * and admins/{uid} = true in firebase/database.rules.json. See that repo's
  * docs/multiplayer.md ("Dev panel") and this repo's README.md.
  *
@@ -497,7 +497,7 @@ async function showServers() {
 
 // Refresh Chat: a marker in World chat ({uid, ts, refresh: true}, no text, never shown). Every game already polls World
 // for new messages, sees the marker and reloads World / System from scratch, dropping deleted messages. Only admins
-// and devs may post one (the game's database.rules.json; IdleAdventure docs/multiplayer.md "Refresh Chat").
+// and devs may post one (the game's database.rules.json; Pocket Quest docs/multiplayer.md "Refresh Chat").
 async function refreshChat(server) {
 	await db("POST", `chat/${server}/world`, { uid: auth.uid, ts: { ".sv": "timestamp" }, refresh: true });
 }

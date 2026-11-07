@@ -85,7 +85,7 @@
 	}
 }
 
-/* CatCafe: the bakery's cream, terracotta and sage, the icon's peach, and
+/* Whisker's Cafe: the bakery's cream, terracotta and sage, the icon's peach, and
    Baloo 2 (the game's own font too). */
 .theme-catcafe {
 	--bg: #fdf8ef;
@@ -118,7 +118,7 @@
 	}
 }
 
-/* IdleAdventure: a storybook fantasy look: parchment, forest green, the
+/* Pocket Quest: a storybook fantasy look: parchment, forest green, the
    heroes' crimson and a gold title, in Baloo 2. */
 .theme-idleadventure {
 	--bg: #fbf7ee;
@@ -457,7 +457,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 @keyframes pounce { 0%, 60%, 100% { transform: translateY(0); } 70% { transform: translate(6px, -14px) rotate(-4deg); } 80% { transform: translateY(0); } }
 @keyframes spin { 0%, 100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-14px) rotate(14deg); } }
 
-/* CatCafe is a landscape game: its hero is a shop window onto the village
+/* Whisker's Cafe is a landscape game: its hero is a shop window onto the village
    instead of a phone, with the chef cat in front and a pastry bobbing. */
 .stage.wide { width: min(460px, 86vw); }
 .shopwin {
@@ -475,7 +475,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 .stage.wide .cat { width: 30%; left: -10%; bottom: -26%; }
 .stage .treat { position: absolute; width: 22%; right: -3%; top: -17%; filter: drop-shadow(0 8px 10px rgb(60 30 10 / 0.25)); animation: spin 6s ease-in-out infinite; }
 
-/* IdleAdventure: a framed storybook picture of the heroes facing the
+/* Pocket Quest: a framed storybook picture of the heroes facing the
    monsters, with the knight in front and the dragon bobbing. */
 .storyframe {
 	position: relative;

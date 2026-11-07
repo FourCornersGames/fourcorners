@@ -1,4 +1,4 @@
-/* CatCafe dev panel (the Bakery repo's game; Firebase project catcafe-97a16).
+/* Whisker's Cafe dev panel (the Bakery repo's game; Firebase project catcafe-97a16).
  *
  * Read-only for now: the players (each one's players/{uid} summary, which the
  * game's PlayerStats writes), a player's page with the summary and the whole
@@ -218,7 +218,7 @@ async function boot() {
 		await token();
 		const me = await getDoc(`devs/${auth.uid}`);
 		if (decodeFields(me?.fields).enabled !== true) {
-			throw new Error(`Signed in, but this account isn't a CatCafe dev: it needs a devs/{uid} document with enabled: true (uid ${auth.uid}).`);
+			throw new Error(`Signed in, but this account isn't a Whisker's Cafe dev: it needs a devs/{uid} document with enabled: true (uid ${auth.uid}).`);
 		}
 	} catch (e) {
 		auth.refreshToken = "";

@@ -14,7 +14,7 @@
 
 const GAMES = [
 	{
-		id: "idleadventure", name: "IdleAdventure", icon: "/idleadventure/img/icon.webp", path: "/dev/idleadventure/",
+		id: "idleadventure", name: "Pocket Quest", icon: "/idleadventure/img/icon.webp", path: "/dev/idleadventure/",
 		apiKey: "AIzaSyD6o36y0eVCQcWBCx7eCfons5QoqIfEmf8", project: "idleadventure-fcg",
 		refreshKey: "ia-dev-refresh", emailKey: "ia-dev-email",
 		need: "admins/{uid} in Firestore and admins/{uid} = true in the Realtime Database",
@@ -35,7 +35,7 @@ const GAMES = [
 		},
 	},
 	{
-		id: "bakery", name: "CatCafe", icon: "/catcafe/img/icon.webp", path: "/dev/bakery/",
+		id: "bakery", name: "Whisker's Cafe", icon: "/catcafe/img/icon.webp", path: "/dev/bakery/",
 		apiKey: "AIzaSyATfD6ZCIdhCGsVxlsPG0RUvplwkBONjhk", project: "catcafe-97a16",
 		refreshKey: "bk-dev-refresh", emailKey: "bk-dev-email",
 		need: "a devs/{uid} document with enabled: true",

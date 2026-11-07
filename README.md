@@ -15,16 +15,16 @@ each links to its other-language twin.
 /fr/yarntoss/          French game page
 /fr/yarntoss/confidentialite.html, conditions.html, supprimer-compte.html
 /yarntoss/img/         game art (webp) for the game page and home card
-/catcafe/              CatCafe game page (working name; the game's repo is jaylapse/Bakery)
+/catcafe/              Whisker's Cafe game page (the game's repo is jaylapse/Bakery)
 /catcafe/privacy.html, terms.html, delete-account.html
 /fr/catcafe/           French game page
 /fr/catcafe/confidentialite.html, conditions.html, supprimer-compte.html
-/catcafe/img/          CatCafe art (webp), made from the game's own PNGs
-/idleadventure/        IdleAdventure game page
+/catcafe/img/          Whisker's Cafe art (webp), made from the game's own PNGs
+/idleadventure/        Pocket Quest game page
 /idleadventure/privacy.html, terms.html, delete-account.html
 /fr/idleadventure/     French game page
 /fr/idleadventure/confidentialite.html, conditions.html, supprimer-compte.html
-/idleadventure/img/    IdleAdventure art (webp), made from the game's own original art
+/idleadventure/img/    Pocket Quest art (webp), made from the game's own original art
 /assets/fonts/         self-hosted Lato (studio) and Baloo 2 (YarnToss), with their OFL licences
 /brand/                logo files and the logo animation script
 /404.html
@@ -58,9 +58,9 @@ account-deletion page if it has accounts. To add a game:
 4. Add the game to the Games section of both home pages and to every page's
    footer.
 
-## CatCafe
+## Whisker's Cafe
 
-CatCafe is the working name of the cat bakery game (`ca.fourcornersgames.catcafe`,
+Whisker's Cafe (named 2026-11-07; it was CatCafe) is the cat bakery game (`ca.fourcornersgames.catcafe`,
 Firebase project `catcafe-97a16`). If the name changes, change the page text,
 not the `/catcafe/` URLs: the Play Console and the game's Google sign-in screen
 link to them. Its legal pages already describe rewarded ads (AdMob) and Google
@@ -70,9 +70,9 @@ yet: `catcafe/img/` is the app icon, characters and the village picture from
 `assets/art/` in the game's repo, and `feature.webp` / `og.jpg` are made from
 them. Swap in real screenshots and the feature graphic once they exist.
 
-## IdleAdventure
+## Pocket Quest
 
-IdleAdventure is the fantasy idle RPG (`ca.fourcornersgames.idleadventure`,
+Pocket Quest (named 2026-11-07; it was IdleAdventure) is the fantasy idle RPG (`ca.fourcornersgames.idleadventure`,
 Firebase project `idleadventure-fcg`, repo `../IdleAdventure`). Its privacy
 policy describes what the game does as of November 2026: anonymous Firebase
 accounts, one cloud save per server with five older copies (Firestore, US),
@@ -124,9 +124,9 @@ with no session sends you to `/dev/#<game>` and comes back after sign-in;
 the **same email and password** in each game's Firebase project. To add a game:
 a `GAMES` entry in `dev/gateway.js` (public API key, project, panel path,
 sessionStorage keys, how it decides who is a dev). The gateway borrows the
-IdleAdventure panel's stylesheet.
+Pocket Quest panel's stylesheet.
 
-## Dev panel (`/dev/bakery/`, CatCafe)
+## Dev panel (`/dev/bakery/`, Whisker's Cafe)
 
 Read-only for now: the players (each one's `players/{uid}` summary, newest
 first, with a search), a player page (the summary, the cloud save's stars,
@@ -135,7 +135,7 @@ coins, device and version, the whole save as JSON, a backup download) and
 keeps the phone's copy over a web edit, Bakery `docs/CLOUD_SAVE.md`). The
 Bakery repo's rules give `isDev()` accounts (`devs/{uid}` with `enabled: true`)
 read access to `players/`, `saves/`, `names/` and `devs/` (branch
-`JL-dev-panel-rules`). CatCafe needs **Email/Password sign-in switched on**
+`JL-dev-panel-rules`). Whisker's Cafe needs **Email/Password sign-in switched on**
 (Authentication → Sign-in method) and a dev login with a `devs/{uid}` document.
 
 ## Dev panel (`/dev/yarntoss/`)
@@ -160,14 +160,14 @@ Firebase APIs), and only once a dev signs in.
 
 ## Dev panel (`/dev/idleadventure/`)
 
-A hidden page for the IdleAdventure devs: the servers, each server's players
+A hidden page for the Pocket Quest devs: the servers, each server's players
 (characters, chat names, names held, dev / ban flags), and a player page that
 releases or changes a name, sets Dev / Banned, edits the cloud save (a few
 quick fields or the raw JSON, with a backup download) and restores a cloud
 history copy. Not linked from anywhere and marked `noindex`, but the URL is not
 the protection: everything goes through Firestore and the Realtime Database with
 the dev's own login, and the game's rules only allow it for accounts with
-`admins/{uid}` in both (the IdleAdventure repo's `firebase/` rules and
+`admins/{uid}` in both (the Pocket Quest repo's `firebase/` rules and
 `docs/multiplayer.md`, "Dev panel", which also has the one-time setup). Like
 the YarnToss panel, it only talks to Google's Firebase APIs once a dev signs in.
 
