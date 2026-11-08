@@ -11,7 +11,7 @@ Quebec (legal name: Quatre Coins, S.E.N.C.). It has these projects:
 | Project | Repo | Package |
 |---|---|---|
 | YarnToss | `YarnToss` | `ca.fourcornersgames.yarntoss` |
-| Whisker's Cafe | `Bakery` | `ca.fourcornersgames.catcafe` |
+| Whiskers Cafe | `Bakery` | `ca.fourcornersgames.catcafe` |
 | Pocket Quest | `IdleAdventure` | `ca.fourcornersgames.idleadventure` |
 | Studio website + shared tooling | `fourcorners` | - |
 
