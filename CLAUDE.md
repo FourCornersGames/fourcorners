@@ -5,7 +5,8 @@ This file exists so every session (Jay's or Will's) has the same context.
 
 ## Four Corners Games
 
-Four Corners Games (Jay and Will) has these projects:
+Four Corners Games (Jay and Will) is a registered general partnership in
+Quebec (legal name: Quatre Coins, S.E.N.C.). It has these projects:
 
 | Project | Repo | Package |
 |---|---|---|
