@@ -15,11 +15,11 @@ each links to its other-language twin.
 /fr/yarntoss/          French game page
 /fr/yarntoss/confidentialite.html, conditions.html, supprimer-compte.html
 /yarntoss/img/         game art (webp) for the game page and home card
-/catcafe/              Whisker's Cafe game page (the game's repo is jaylapse/Bakery)
+/catcafe/              Whiskers Cafe game page (the game's repo is jaylapse/Bakery)
 /catcafe/privacy.html, terms.html, delete-account.html
 /fr/catcafe/           French game page
 /fr/catcafe/confidentialite.html, conditions.html, supprimer-compte.html
-/catcafe/img/          Whisker's Cafe art (webp), made from the game's own PNGs
+/catcafe/img/          Whiskers Cafe art (webp), made from the game's own PNGs
 /idleadventure/        Pocket Quest game page
 /idleadventure/privacy.html, terms.html, delete-account.html
 /fr/idleadventure/     French game page
@@ -58,9 +58,9 @@ account-deletion page if it has accounts. To add a game:
 4. Add the game to the Games section of both home pages and to every page's
    footer.
 
-## Whisker's Cafe
+## Whiskers Cafe
 
-Whisker's Cafe (named 2026-11-07; it was CatCafe) is the cat bakery game (`ca.fourcornersgames.catcafe`,
+Whiskers Cafe (named 2026-11-07; it was CatCafe) is the cat bakery game (`ca.fourcornersgames.catcafe`,
 Firebase project `catcafe-97a16`). If the name changes, change the page text,
 not the `/catcafe/` URLs: the Play Console and the game's Google sign-in screen
 link to them. Its legal pages already describe rewarded ads (AdMob) and Google
@@ -126,7 +126,7 @@ a `GAMES` entry in `dev/gateway.js` (public API key, project, panel path,
 sessionStorage keys, how it decides who is a dev). The gateway borrows the
 Pocket Quest panel's stylesheet.
 
-## Dev panel (`/dev/bakery/`, Whisker's Cafe)
+## Dev panel (`/dev/bakery/`, Whiskers Cafe)
 
 Read-only for now: the players (each one's `players/{uid}` summary, newest
 first, with a search), a player page (the summary, the cloud save's stars,
@@ -135,7 +135,7 @@ coins, device and version, the whole save as JSON, a backup download) and
 keeps the phone's copy over a web edit, Bakery `docs/CLOUD_SAVE.md`). The
 Bakery repo's rules give `isDev()` accounts (`devs/{uid}` with `enabled: true`)
 read access to `players/`, `saves/`, `names/` and `devs/` (branch
-`JL-dev-panel-rules`). Whisker's Cafe needs **Email/Password sign-in switched on**
+`JL-dev-panel-rules`). Whiskers Cafe needs **Email/Password sign-in switched on**
 (Authentication → Sign-in method) and a dev login with a `devs/{uid}` document.
 
 ## Dev panel (`/dev/yarntoss/`)

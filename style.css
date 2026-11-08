@@ -85,7 +85,7 @@
 	}
 }
 
-/* Whisker's Cafe: the bakery's cream, terracotta and sage, the icon's peach, and
+/* Whiskers Cafe: the bakery's cream, terracotta and sage, the icon's peach, and
    Baloo 2 (the game's own font too). */
 .theme-catcafe {
 	--bg: #fdf8ef;
@@ -457,7 +457,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 @keyframes pounce { 0%, 60%, 100% { transform: translateY(0); } 70% { transform: translate(6px, -14px) rotate(-4deg); } 80% { transform: translateY(0); } }
 @keyframes spin { 0%, 100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-14px) rotate(14deg); } }
 
-/* Whisker's Cafe is a landscape game: its hero is a shop window onto the village
+/* Whiskers Cafe is a landscape game: its hero is a shop window onto the village
    instead of a phone, with the chef cat in front and a pastry bobbing. */
 .stage.wide { width: min(460px, 86vw); }
 .shopwin {

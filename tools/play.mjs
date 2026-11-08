@@ -20,7 +20,7 @@ const KEY_PATH = process.env.PLAY_SA_KEY
 
 export const APPS = {
 	pocketquest: 'ca.fourcornersgames.idleadventure', // Pocket Quest (was IdleAdventure)
-	whiskers: 'ca.fourcornersgames.catcafe',          // Whisker's Cafe (was Bakery / CatCafe)
+	whiskers: 'ca.fourcornersgames.catcafe',          // Whiskers Cafe (was Bakery / CatCafe)
 	yarntoss: 'ca.fourcornersgames.yarntoss',
 };
 

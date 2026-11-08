@@ -10,7 +10,7 @@ Four Corners Games (Jay and Will) has these projects:
 | Project | Repo | Package |
 |---|---|---|
 | YarnToss | `YarnToss` | `ca.fourcornersgames.yarntoss` |
-| Whisker's Cafe | `Bakery` | `ca.fourcornersgames.catcafe` |
+| Whiskers Cafe | `Bakery` | `ca.fourcornersgames.catcafe` |
 | Pocket Quest | `IdleAdventure` | `ca.fourcornersgames.idleadventure` |
 | Studio website + shared tooling | `fourcorners` | - |
 

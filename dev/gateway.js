@@ -35,7 +35,7 @@ const GAMES = [
 		},
 	},
 	{
-		id: "bakery", name: "Whisker's Cafe", icon: "/catcafe/img/icon.webp", path: "/dev/bakery/",
+		id: "bakery", name: "Whiskers Cafe", icon: "/catcafe/img/icon.webp", path: "/dev/bakery/",
 		apiKey: "AIzaSyATfD6ZCIdhCGsVxlsPG0RUvplwkBONjhk", project: "catcafe-97a16",
 		refreshKey: "bk-dev-refresh", emailKey: "bk-dev-email",
 		need: "a devs/{uid} document with enabled: true",
