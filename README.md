@@ -111,7 +111,7 @@ YarnToss uses:
 
 ## Dev panels: the gateway (`/dev/`)
 
-`/dev/` is the way into every game's dev panel (Jay, 2026-11-06). **One
+`/dev/` is the way into every game's dev panel (James, 2026-11-06). **One
 sign-in**: the email and password are tried on each game's own Firebase project
 at once (each game has its own accounts), each game's own rules decide whether
 that account is a dev there, and a card per game says **Open** or why not ("no

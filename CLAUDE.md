@@ -1,11 +1,11 @@
 # Four Corners Games website
 
 The studio website and the tooling shared by all our games (`tools/`).
-This file exists so every session (Jay's or Will's) has the same context.
+This file exists so every session (James's or William's) has the same context.
 
 ## Four Corners Games
 
-Four Corners Games (Jay and Will) is a registered general partnership in
+Four Corners Games (James and William) is a registered general partnership in
 Quebec (legal name: Quatre Coins, S.E.N.C.). It has these projects:
 
 | Project | Repo | Package |
