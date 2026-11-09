@@ -10,6 +10,10 @@ each links to its other-language twin.
 ```
 /                      studio home (games, about, contact)
 /fr/                   French home
+/cookies.html          website privacy and cookies (the site itself, not the games)
+/fr/temoins.html       its French twin
+/refunds.html          refund policy for purchases in all three games
+/fr/remboursements.html  its French twin
 /yarntoss/             YarnToss game page
 /yarntoss/privacy.html, terms.html, delete-account.html
 /fr/yarntoss/          French game page
@@ -32,6 +36,25 @@ each links to its other-language twin.
 
 Fonts and images are all self-hosted, so visiting the site never contacts a
 third party (the privacy policies rely on that).
+
+## Studio-wide legal pages
+
+`/cookies.html` (and `/fr/temoins.html`) says the site sets **no cookies**, has
+no analytics, ads, pixels or embeds, and has no forms, which is why there is no
+cookie banner. Keep it true: before adding analytics, a cookie, an embedded
+video/map/widget, a third-party font or script, or a form, update that page
+(both languages) and, where the law requires it (Quebec's Law 25, the EU/UK),
+add a consent prompt that is off by default. `/refunds.html` (and
+`/fr/remboursements.html`) summarizes the purchase rules in each game's terms;
+change both if the terms change. Both are linked from every page's footer
+(Studio column) and from each game page's Help & legal section.
+
+Every footer names the registered partnership (Quatre Coins, S.E.N.C.), and so
+does each game's privacy policy, terms and deletion page.
+
+Colour contrast: text colours were checked against WCAG AA (4.5:1) in light
+and dark (see the comment at the top of `style.css`); check new colours the
+same way.
 
 ## Old URLs are redirect stubs - keep them
 
@@ -56,7 +79,8 @@ account-deletion page if it has accounts. To add a game:
    the game-page tokens `--pop`, `--ink`, `--go`, `--go-shade`) and put it on
    each page's `<body>`.
 4. Add the game to the Games section of both home pages and to every page's
-   footer.
+   footer, and add it to the refund policy and the website privacy page's list
+   of games (both languages).
 
 ## Whiskers Cafe
 

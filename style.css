@@ -5,7 +5,13 @@
    pages add a theme class on <body> (e.g. .theme-yarntoss) that swaps the
    colour tokens and display font for that game's own. The game page also
    reads four game tokens: --pop (the title and number badges), --ink (their
-   outline), and --go / --go-shade (the hero's main button). */
+   outline), and --go / --go-shade (the hero's main button), with --on-go
+   for that button's text (white unless the green is too light for it).
+
+   Contrast: the text colours (--fg, --muted, --accent, --on-accent,
+   --on-go) were checked against WCAG AA (4.5:1) on --bg, --surface,
+   --card and --accent-soft, in light and dark (November 2026). Check a
+   new colour the same way before adding it. */
 
 @font-face {
 	font-family: "Lato";
@@ -61,13 +67,14 @@
 	--fg: #3a2a20;
 	--muted: #7a6353;
 	--line: #eedfc6;
-	--accent: #c9483c;
+	--accent: #b23a2f;
 	--accent-soft: #fde6df;
 	--on-accent: #ffffff;
 	--pop: #fbd94b;
 	--ink: #3a2410;
 	--go: #58b44c;
 	--go-shade: #3c8a33;
+	--on-go: var(--ink); /* white on this green is only 2.6:1 */
 	--shadow: 0 1px 2px rgb(80 50 20 / 0.08), 0 14px 34px -14px rgb(80 50 20 / 0.3);
 	--display: "Baloo 2", system-ui, sans-serif;
 }
@@ -94,7 +101,7 @@
 	--fg: #3b2a1f;
 	--muted: #776354;
 	--line: #ecdfca;
-	--accent: #b5532c;
+	--accent: #a2481f;
 	--accent-soft: #fbe4d5;
 	--on-accent: #ffffff;
 	--pop: #f7b36b;
@@ -436,7 +443,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 }
 .tagline { font-family: var(--display); font-weight: 700; font-size: clamp(1.3rem, 3vw, 1.7rem); margin: 10px 0 0; }
 .game-hero .lead { color: var(--muted); font-size: 1.12rem; max-width: 46ch; margin: 16px 0 20px; }
-.game-hero .btn { background: var(--go); color: #fff; box-shadow: 0 4px 0 var(--go-shade); }
+.game-hero .btn { background: var(--go); color: var(--on-go, #fff); box-shadow: 0 4px 0 var(--go-shade); }
 .game-hero .btn:hover { box-shadow: 0 6px 0 var(--go-shade); }
 .game-hero .btn.ghost { background: transparent; color: var(--fg); box-shadow: none; }
 
