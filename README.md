@@ -56,7 +56,12 @@ video/map/widget, a third-party font or script, or a form, update that page
 add a consent prompt that is off by default. `/refunds.html` (and
 `/fr/remboursements.html`) summarizes the purchase rules in each game's terms;
 change both if the terms change. Both are linked from every page's footer
-(Studio column) and from each game page's Help & legal section.
+(Policies column) and from each game page's Help & legal section.
+
+The footer has four columns: the brand, Games (the three game pages),
+Policies and Studio. Each game's own privacy policy, terms and deletion page
+are linked from that game's page (top bar and Help & legal), not from the
+footer.
 
 Every footer names the registered partnership, Four Corners G.P. on English
 pages and Quatre Coins S.E.N.C. on French ones (its declared English and
@@ -89,8 +94,8 @@ account-deletion page if it has accounts. To add a game:
 3. Add a `.theme-<game>` block in `style.css` (colours and display font, plus
    the game-page tokens `--pop`, `--ink`, `--go`, `--go-shade`) and put it on
    each page's `<body>`.
-4. Add the game to the Games section of both home pages and to every page's
-   footer, and add it to the refund policy and the website privacy page's list
+4. Add the game to the Games section of both home pages and to the Games
+   column of every page's footer, and add it to the refund policy and the website privacy page's list
    of games (both languages).
 
 ## Whiskers Cafe

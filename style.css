@@ -618,7 +618,7 @@ footer.site .cols {
 	margin: 0 auto;
 	padding: 44px 24px 24px;
 	display: grid;
-	grid-template-columns: 1.3fr repeat(4, 1fr) auto;
+	grid-template-columns: 1.4fr 1fr 1.4fr auto;
 	gap: 28px;
 }
 footer.site h3 { font-family: var(--body); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg); margin-bottom: 12px; }
@@ -636,7 +636,7 @@ footer.site .base { max-width: var(--max); margin: 0 auto; padding: 18px 24px 40
 	.game-card .art { display: none; }
 	.features { grid-template-columns: 1fr; }
 	footer.site .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-	footer.site .cols > div:first-child { grid-column: 1 / -1; }
+	footer.site .cols > div:first-child, footer.site .cols > div:last-child { grid-column: 1 / -1; }
 	.stage { margin: 24px auto 20px; }
 	.stage .cat { left: -30%; }
 	.stage.wide { margin-bottom: 56px; }
