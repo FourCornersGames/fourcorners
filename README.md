@@ -32,7 +32,16 @@ each links to its other-language twin.
 /assets/fonts/         self-hosted Lato (studio) and Baloo 2 (YarnToss), with their OFL licences
 /brand/                logo files and the logo animation script
 /404.html
+/robots.txt            allows everything, points to the sitemap
+/sitemap.xml           every public page with its other-language twin; made by tools/sitemap.py
+/favicon.svg           the icon (follows light/dark), plus favicon.ico (16/32/48, for older
+/apple-touch-icon.png  browsers) and the 180 px iPhone home-screen icon, both made from brand/
 ```
+
+**After adding, removing or renaming a page, run `python3 tools/sitemap.py`**
+and commit the new `sitemap.xml`. It skips `/dev/`, the 404 page and any page
+marked `noindex` (the redirect stubs). New pages need a `<title>`, a
+`<meta name="description">`, the three icon `<link>`s and the hreflang pair.
 
 Fonts and images are all self-hosted, so visiting the site never contacts a
 third party (the privacy policies rely on that).
