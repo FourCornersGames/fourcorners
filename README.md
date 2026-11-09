@@ -49,8 +49,10 @@ add a consent prompt that is off by default. `/refunds.html` (and
 change both if the terms change. Both are linked from every page's footer
 (Studio column) and from each game page's Help & legal section.
 
-Every footer names the registered partnership (Quatre Coins, S.E.N.C.), and so
-does each game's privacy policy, terms and deletion page.
+Every footer names the registered partnership, Four Corners G.P. on English
+pages and Quatre Coins S.E.N.C. on French ones (its declared English and
+French names), and so does each game's privacy policy, terms and deletion
+page. The "Who we are" sections and the home page give both names.
 
 Colour contrast: text colours were checked against WCAG AA (4.5:1) in light
 and dark (see the comment at the top of `style.css`); check new colours the

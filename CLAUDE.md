@@ -6,7 +6,9 @@ This file exists so every session (James's or William's) has the same context.
 ## Four Corners Games
 
 Four Corners Games (James and William) is a registered general partnership in
-Quebec (legal name: Quatre Coins, S.E.N.C.). It has these projects:
+Quebec. Its legal name is Quatre Coins S.E.N.C., and its legal English name is
+Four Corners G.P. (use the English name in English text, the French name in
+French text). It has these projects:
 
 | Project | Repo | Package |
 |---|---|---|
