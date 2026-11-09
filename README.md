@@ -66,7 +66,10 @@ footer.
 Every footer names the registered partnership, Four Corners G.P. on English
 pages and Quatre Coins S.E.N.C. on French ones (its declared English and
 French names), and so does each game's privacy policy, terms and deletion
-page. The "Who we are" sections and the home page give both names.
+page. The "Who we are" sections and the home page give both names. The studio
+name itself is Four Corners Games on English pages and Jeux Quatre Coins on
+French ones (header, footer, titles and text); "le Four Corners", the place the
+studio is named after, stays as is.
 
 Colour contrast: text colours were checked against WCAG AA (4.5:1) in light
 and dark (see the comment at the top of `style.css`); check new colours the

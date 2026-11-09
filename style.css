@@ -587,7 +587,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; l
 .subnav a[aria-current] { font-weight: 600; }
 
 /* ---------- legal documents ---------- */
-.doc { max-width: 720px; margin: 0 auto; padding: 56px 24px 40px; }
+.doc { max-width: 720px; margin: 0 auto; padding: 56px 24px 40px; overflow-wrap: break-word; }
 .doc h1 { font-size: clamp(2rem, 5vw, 2.7rem); }
 .doc .meta { margin: 10px 0 28px; color: var(--muted); font-size: 0.9rem; }
 .doc h2 { font-size: 1.3rem; margin: 2.4rem 0 0.4rem; }
