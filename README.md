@@ -19,7 +19,7 @@ each links to its other-language twin.
 /fr/yarntoss/          French game page
 /fr/yarntoss/confidentialite.html, conditions.html, supprimer-compte.html
 /yarntoss/img/         game art (webp) for the game page and home card
-/catcafe/              Whiskers Cafe game page (the game's repo is jaylapse/Bakery)
+/catcafe/              Whiskers Cafe game page (the game's repo is FourCornersGames/Bakery)
 /catcafe/privacy.html, terms.html, delete-account.html
 /fr/catcafe/           French game page
 /fr/catcafe/confidentialite.html, conditions.html, supprimer-compte.html

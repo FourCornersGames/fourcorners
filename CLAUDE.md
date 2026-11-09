@@ -19,7 +19,9 @@ projects:
 | Pocket Quest | `IdleAdventure` | `ca.fourcornersgames.idleadventure` |
 | Studio website + shared tooling | `fourcorners` | - |
 
-All repos are on github.com/jaylapse. Google Play Console tooling for all three
+Whiskers Cafe (`Bakery`) and Pocket Quest (`IdleAdventure`) are on
+github.com/FourCornersGames (moved 2026-11-09); YarnToss and `fourcorners`
+are still on github.com/jaylapse. Google Play Console tooling for all three
 apps is `node tools/play.mjs` in the `fourcorners` repo; each person keeps the
 service account key outside the repos (`PLAY_SA_KEY`), and it is never
 committed. When a studio-wide fact here changes (a new or renamed game, repo or
