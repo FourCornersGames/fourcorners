@@ -17,6 +17,7 @@ projects:
 | YarnToss | `YarnToss` | `ca.fourcornersgames.yarntoss` |
 | Whiskers Cafe | `Bakery` | `ca.fourcornersgames.catcafe` |
 | Pocket Quest | `IdleAdventure` | `ca.fourcornersgames.idleadventure` |
+| Dragon's Hoard TD | `Dragons-Hoard-TD` | not set yet |
 | Studio website + shared tooling | `fourcorners` | - |
 
 All repos are on github.com/FourCornersGames (moved from jaylapse on
