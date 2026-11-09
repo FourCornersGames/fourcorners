@@ -17,7 +17,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/lato-semibold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=2026-11-09">
+<link rel="stylesheet" href="/style.css?v=2026-11-09b">
 </head>
 <body>
 <a class="skip" href="#main">Aller au contenu</a>
@@ -38,43 +38,39 @@
 	<div class="framed"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span><h1>Le carrefour du jeu</h1></div>
 	<p class="lead">Four Corners Games est un studio de deux personnes fondé par James et William. Nous créons des jeux ludiques pour ton téléphone, en français et en anglais.</p>
 	<div class="actions">
-		<a class="btn" href="/fr/yarntoss/">Découvrir YarnToss <span class="arrow" aria-hidden="true">→</span></a>
+		<a class="btn" href="#games">Voir nos jeux <span class="arrow" aria-hidden="true">↓</span></a>
 		<a class="btn ghost" href="#contact">Nous écrire</a>
 	</div>
 </section>
 
 <section class="section" id="games">
 	<div class="section-head"><h2>Jeux</h2><p>Ce sur quoi nous travaillons en ce moment.</p></div>
-	<a class="game-card" href="/fr/yarntoss/">
-		<div class="art"><img src="/yarntoss/img/feature.webp" width="1024" height="500" alt="Illustration de YarnToss : Mémé en robe de chambre dans le jardin, une pelote de laine lancée vers Sir Duvetington, le chat boss"></div>
-		<div class="info">
-			<div class="title"><img src="/yarntoss/img/icon.webp" width="60" height="60" alt=""><h3>YarnToss</h3></div>
-			<div class="pills"><span class="pill dot">En développement</span><span class="pill plain">Android</span></div>
-			<p><strong style="color:var(--fg)">Les chats envahissent la maison de Mémé. Lance ta laine et défends chaque pièce!</strong></p>
-			<p>Touche pour lancer, esquive les attaques des boss et bâtis ta Mémé idéale, pièce par pièce.</p>
-			<span class="more">Voir la page du jeu <span class="arrow" aria-hidden="true">→</span></span>
-		</div>
-	</a>
-	<a class="game-card" href="/fr/catcafe/">
-		<div class="art"><img src="/catcafe/img/feature.webp?v=4" width="1024" height="500" alt="Illustration de Whiskers Cafe : cinq chats assis en rang sur la place du village, avec un croissant et un petit gâteau"></div>
-		<div class="info">
-			<div class="title"><img src="/catcafe/img/icon.webp?v=2" width="60" height="60" alt=""><h3>Whiskers Cafe</h3></div>
-			<div class="pills"><span class="pill dot">En développement</span><span class="pill plain">Android</span></div>
-			<p><strong style="color:var(--fg)">Une boulangerie de chats douillette qui ne ferme jamais.</strong></p>
-			<p>Cuis, prépare du café et engage des aides qui font rouler la boutique quand tu n’es pas là. Laisse-la ouverte sur ton bureau et regarde-la grandir.</p>
-			<span class="more">Voir la page du jeu <span class="arrow" aria-hidden="true">→</span></span>
-		</div>
-	</a>
-	<a class="game-card" href="/fr/idleadventure/">
-		<div class="art"><img src="/idleadventure/img/feature.webp" width="1024" height="500" alt="Illustration Pocket Quest : un magicien, un archer et un chevalier face à un loup, un cyclope et un dragon rouge sur un chemin en forêt"></div>
-		<div class="info">
-			<div class="title"><img src="/idleadventure/img/icon.webp" width="60" height="60" alt=""><h3>Pocket Quest</h3></div>
-			<div class="pills"><span class="pill dot">En développement</span><span class="pill plain">Android</span></div>
-			<p><strong style="color:var(--fg)">Une aventure fantastique qui continue pendant votre absence.</strong></p>
-			<p>Votre héros chasse, ramasse du butin et monte de niveau tout seul. Choisissez une Voie, ouvrez des sacs de butin et clavardez avec votre serveur.</p>
-			<span class="more">Voir la page du jeu <span class="arrow" aria-hidden="true">→</span></span>
-		</div>
-	</a>
+	<div class="game-grid">
+		<a class="game-card" href="/fr/yarntoss/">
+			<div class="art"><img src="/yarntoss/img/feature.webp" width="1024" height="500" alt=""></div>
+			<div class="info">
+				<img class="icon" src="/yarntoss/img/icon.webp" width="48" height="48" alt="">
+				<div><h3>YarnToss</h3><p>Mémé contre les chats</p><p class="status">En test · Android</p></div>
+				<span class="go" aria-hidden="true">→</span>
+			</div>
+		</a>
+		<a class="game-card" href="/fr/catcafe/">
+			<div class="art"><img src="/catcafe/img/feature.webp?v=4" width="1024" height="500" alt=""></div>
+			<div class="info">
+				<img class="icon" src="/catcafe/img/icon.webp?v=2" width="48" height="48" alt="">
+				<div><h3>Whiskers Cafe</h3><p>Une boulangerie de chats douillette qui ne ferme jamais</p><p class="status">En développement · Android</p></div>
+				<span class="go" aria-hidden="true">→</span>
+			</div>
+		</a>
+		<a class="game-card" href="/fr/idleadventure/">
+			<div class="art"><img src="/idleadventure/img/feature.webp" width="1024" height="500" alt=""></div>
+			<div class="info">
+				<img class="icon" src="/idleadventure/img/icon.webp" width="48" height="48" alt="">
+				<div><h3>Pocket Quest</h3><p>Une aventure fantastique qui continue pendant votre absence</p><p class="status">En développement · Android</p></div>
+				<span class="go" aria-hidden="true">→</span>
+			</div>
+		</a>
+	</div>
 </section>
 
 <section class="section" id="about">
@@ -85,7 +81,7 @@
 			<p style="color:var(--muted)">Le studio porte le nom du Four Corners, l’intersection entre nos maisons d’enfance.</p>
 			<p style="color:var(--muted)">Chacun de nos jeux sort en français et en anglais. Nous ne recueillons que ce dont un jeu a vraiment besoin, et nous l’expliquons en langage clair.</p>
 		</div>
-		<ul class="facts"><li><span>Studio</span><b>Four Corners Games</b></li><li><span>Nom légal</span><b>Quatre Coins S.E.N.C. (Four Corners G.P.)</b></li><li><span>Équipe</span><b>James et William</b></li><li><span>Basé à</span><b>Québec, Canada</b></li><li><span>Langues</span><b>Français · English</b></li></ul>
+		<ul class="facts"><li><span>Studio</span><b>Four Corners Games</b></li><li><span>Nom légal</span><b>Quatre Coins S.E.N.C.</b></li><li><span>Équipe</span><b>James et William</b></li><li><span>Basé à</span><b>Québec, Canada</b></li><li><span>Langues</span><b>Français · English</b></li></ul>
 	</div>
 </section>
 

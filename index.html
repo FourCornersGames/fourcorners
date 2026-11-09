@@ -17,7 +17,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/lato-semibold.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=2026-11-09">
+<link rel="stylesheet" href="/style.css?v=2026-11-09b">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -38,43 +38,39 @@
 	<div class="framed"><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span><h1>The Intersection of Gaming</h1></div>
 	<p class="lead">Four Corners Games is a two-person studio founded by James and William. We make playful games for your phone, in English and French.</p>
 	<div class="actions">
-		<a class="btn" href="/yarntoss/">Meet YarnToss <span class="arrow" aria-hidden="true">→</span></a>
+		<a class="btn" href="#games">See our games <span class="arrow" aria-hidden="true">↓</span></a>
 		<a class="btn ghost" href="#contact">Get in touch</a>
 	</div>
 </section>
 
 <section class="section" id="games">
 	<div class="section-head"><h2>Games</h2><p>What we’re working on right now.</p></div>
-	<a class="game-card" href="/yarntoss/">
-		<div class="art"><img src="/yarntoss/img/feature.webp" width="1024" height="500" alt="YarnToss key art: Granny in her bathrobe in the garden, a ball of yarn flying at Sir Fluffington, the boss cat"></div>
-		<div class="info">
-			<div class="title"><img src="/yarntoss/img/icon.webp" width="60" height="60" alt=""><h3>YarnToss</h3></div>
-			<div class="pills"><span class="pill dot">In development</span><span class="pill plain">Android</span></div>
-			<p><strong style="color:var(--fg)">Granny’s house is overrun by cats. Grab your yarn and defend every room!</strong></p>
-			<p>Tap to throw, dodge boss attacks and build the perfect Granny, room by room.</p>
-			<span class="more">Visit the game page <span class="arrow" aria-hidden="true">→</span></span>
-		</div>
-	</a>
-	<a class="game-card" href="/catcafe/">
-		<div class="art"><img src="/catcafe/img/feature.webp?v=4" width="1024" height="500" alt="Whiskers Cafe art: five cats sitting in a row on the village green, with a croissant and a cupcake"></div>
-		<div class="info">
-			<div class="title"><img src="/catcafe/img/icon.webp?v=2" width="60" height="60" alt=""><h3>Whiskers Cafe</h3></div>
-			<div class="pills"><span class="pill dot">In development</span><span class="pill plain">Android</span></div>
-			<p><strong style="color:var(--fg)">A cozy cat bakery that never closes.</strong></p>
-			<p>Bake, brew and hire helpers who keep the shop going while you’re away. Leave it open on your desk and watch it grow.</p>
-			<span class="more">Visit the game page <span class="arrow" aria-hidden="true">→</span></span>
-		</div>
-	</a>
-	<a class="game-card" href="/idleadventure/">
-		<div class="art"><img src="/idleadventure/img/feature.webp" width="1024" height="500" alt="Pocket Quest art: a wizard, an archer and a knight facing a wolf, a cyclops and a red dragon on a forest road"></div>
-		<div class="info">
-			<div class="title"><img src="/idleadventure/img/icon.webp" width="60" height="60" alt=""><h3>Pocket Quest</h3></div>
-			<div class="pills"><span class="pill dot">In development</span><span class="pill plain">Android</span></div>
-			<p><strong style="color:var(--fg)">A fantasy adventure that keeps going while you’re away.</strong></p>
-			<p>Your hero hunts, loots and levels up on their own. Choose a Path, open Loot Bags and chat with your server.</p>
-			<span class="more">Visit the game page <span class="arrow" aria-hidden="true">→</span></span>
-		</div>
-	</a>
+	<div class="game-grid">
+		<a class="game-card" href="/yarntoss/">
+			<div class="art"><img src="/yarntoss/img/feature.webp" width="1024" height="500" alt=""></div>
+			<div class="info">
+				<img class="icon" src="/yarntoss/img/icon.webp" width="48" height="48" alt="">
+				<div><h3>YarnToss</h3><p>Granny vs. the cats</p><p class="status">In testing · Android</p></div>
+				<span class="go" aria-hidden="true">→</span>
+			</div>
+		</a>
+		<a class="game-card" href="/catcafe/">
+			<div class="art"><img src="/catcafe/img/feature.webp?v=4" width="1024" height="500" alt=""></div>
+			<div class="info">
+				<img class="icon" src="/catcafe/img/icon.webp?v=2" width="48" height="48" alt="">
+				<div><h3>Whiskers Cafe</h3><p>A cozy cat bakery that never closes</p><p class="status">In development · Android</p></div>
+				<span class="go" aria-hidden="true">→</span>
+			</div>
+		</a>
+		<a class="game-card" href="/idleadventure/">
+			<div class="art"><img src="/idleadventure/img/feature.webp" width="1024" height="500" alt=""></div>
+			<div class="info">
+				<img class="icon" src="/idleadventure/img/icon.webp" width="48" height="48" alt="">
+				<div><h3>Pocket Quest</h3><p>A fantasy adventure that keeps going while you’re away</p><p class="status">In development · Android</p></div>
+				<span class="go" aria-hidden="true">→</span>
+			</div>
+		</a>
+	</div>
 </section>
 
 <section class="section" id="about">
@@ -85,7 +81,7 @@
 			<p style="color:var(--muted)">The studio is named after the Four Corners, the intersection between our childhood homes.</p>
 			<p style="color:var(--muted)">Every game we make ships in English and French. We keep what we collect to what a game actually needs, and we explain it in plain language.</p>
 		</div>
-		<ul class="facts"><li><span>Studio</span><b>Four Corners Games</b></li><li><span>Legal name</span><b>Four Corners G.P. (Quatre Coins S.E.N.C.)</b></li><li><span>Team</span><b>James &amp; William</b></li><li><span>Based in</span><b>Quebec, Canada</b></li><li><span>Languages</span><b>English · Français</b></li></ul>
+		<ul class="facts"><li><span>Studio</span><b>Four Corners Games</b></li><li><span>Legal name</span><b>Four Corners G.P.</b></li><li><span>Team</span><b>James &amp; William</b></li><li><span>Based in</span><b>Quebec, Canada</b></li><li><span>Languages</span><b>English · Français</b></li></ul>
 	</div>
 </section>
 
