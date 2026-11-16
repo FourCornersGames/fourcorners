@@ -279,7 +279,7 @@ function route() {
 	});
 	leaveGuard = null;
 	window.scrollTo(0, 0);
-	const views = { leaderboard: showLeaderboard, players: showPlayers, player: showPlayer, messages: showMessages, config: showConfig };
+	const views = { leaderboard: showLeaderboard, players: showPlayers, player: showPlayer, pictures: showPictures, messages: showMessages, config: showConfig };
 	(views[name] || showLeaderboard)(decodeURIComponent(arg));
 }
 
@@ -303,6 +303,111 @@ function failed(e) {
 }
 
 const skinName = (id) => GAME.skins.find((s) => s.id === id)?.name || id || "";
+
+// --- Profile pictures ------------------------------------------------------
+// Players send a picture from Choose Your Cat in the game (photo_reviews/{uid}
+// = {data: base64 JPEG, username, status: "pending", sent_at}). Approve writes
+// photos/{uid} = {data, version, approved_at}, sets `photo` = version on their
+// leaderboard/{uid} (so rows know to show it) and deletes the review; the
+// player's game sees the answer at its next launch. Deny replaces the review
+// with {status: "denied", reason} (the picture is dropped). The YarnToss
+// repo's scripts/player_photos.gd and docs/firebase.md "Profile pictures".
+
+// The Daily Run's week ("2026-11-09"): the Monday of this New York week, as
+// SaveManager.week_key() in the game.
+function weekKey() {
+	const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
+	const d = new Date(`${today}T00:00:00Z`);
+	d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+	return d.toISOString().slice(0, 10);
+}
+
+async function showPictures() {
+	view.innerHTML = `<p class="loading">Loading pictures…</p>`;
+	try {
+		const docs = await runQuery({
+			from: [{ collectionId: "photo_reviews" }],
+			where: { fieldFilter: { field: { fieldPath: "status" }, op: "EQUAL", value: { stringValue: "pending" } } },
+		});
+		const waiting = docs.map((doc) => ({ uid: docId(doc), ...decodeFields(doc.fields) }))
+			.sort((a, b) => (a.sent_at || "").localeCompare(b.sent_at || ""));
+		view.innerHTML = `
+			<div class="toolbar"><h1>Pictures</h1><span class="count">${fmt(waiting.length)} waiting</span><span class="spacer"></span><button class="btn ghost small" id="refresh" type="button">Refresh</button></div>
+			${waiting.length ? "" : `<div class="card"><p class="muted">No pictures waiting for review.</p></div>`}
+			<div class="photo-grid">${waiting.map((r) => `
+				<div class="card photo-card">
+					<img src="data:image/jpeg;base64,${esc(r.data)}" alt="" width="128" height="128">
+					<div><a class="name-link" href="#/player/${encodeURIComponent(r.uid)}"><strong>${esc(r.username || "?")}</strong></a><br><code class="small">${esc(r.uid)}</code><br><span class="muted small">sent ${esc(when(r.sent_at))}</span></div>
+					<input type="text" maxlength="200" placeholder="Reason (shown to the player with a denial)" data-reason="${esc(r.uid)}">
+					<div class="row"><button class="btn small" data-approve="${esc(r.uid)}" type="button">Approve</button>
+					<button class="btn ghost small" data-deny="${esc(r.uid)}" type="button">Deny</button></div>
+				</div>`).join("")}</div>`;
+		$("#refresh").addEventListener("click", showPictures);
+		const byUid = Object.fromEntries(waiting.map((r) => [r.uid, r]));
+		const decide = async (uid, approve, btn) => {
+			const r = byUid[uid];
+			const reason = view.querySelector(`[data-reason="${CSS.escape(uid)}"]`).value.trim();
+			btn.disabled = true;
+			try {
+				if (approve) await approvePicture(uid, r.data);
+				else await denyPicture(uid, r, reason);
+				toast(approve ? "Approved. It shows on their profile and the Leaderboard." : "Denied. They see the reason at their next launch.");
+				showPictures();
+			} catch (e) { toast(e.message, true); btn.disabled = false; }
+		};
+		view.querySelectorAll("[data-approve]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.approve, true, b)));
+		view.querySelectorAll("[data-deny]").forEach((b) => b.addEventListener("click", () => decide(b.dataset.deny, false, b)));
+	} catch (e) { failed(e); }
+}
+
+async function approvePicture(uid, data) {
+	const version = Date.now();
+	const writes = [
+		{
+			update: { name: docName(`photos/${uid}`), fields: { data: encode(data), version: encode(version) } },
+			updateTransforms: [{ fieldPath: "approved_at", setToServerValue: "REQUEST_TIME" }],
+		},
+		{ delete: docName(`photo_reviews/${uid}`) },
+	];
+	// The flag on their leaderboard entry (only if they have one: an update
+	// of a missing doc would fail the whole commit). Their Daily entry gets
+	// it from their game's next Daily push.
+	if (await getDoc(`leaderboard/${encodeURIComponent(uid)}`)) {
+		writes.push({
+			update: { name: docName(`leaderboard/${uid}`), fields: { photo: encode(version) } },
+			updateMask: { fieldPaths: ["photo"] },
+			currentDocument: { exists: true },
+		});
+	}
+	await commit(writes);
+}
+
+async function denyPicture(uid, review, reason) {
+	await commit([{
+		update: {
+			name: docName(`photo_reviews/${uid}`),
+			fields: {
+				status: encode("denied"), reason: encode(reason), username: encode(review.username || ""),
+				...(review.sent_at ? { sent_at: { timestampValue: review.sent_at } } : {}),
+			},
+		},
+		updateTransforms: [{ fieldPath: "decided_at", setToServerValue: "REQUEST_TIME" }],
+		currentDocument: { exists: true },
+	}]);
+}
+
+// Takes an approved picture down (moderation): the photo, and the flag on
+// their leaderboard entry and this week's Daily entry, so no row asks for it.
+async function removePicture(uid) {
+	await commit([{ delete: docName(`photos/${uid}`) }]);
+	for (const path of [`leaderboard/${uid}`, `daily/${weekKey()}/entries/${uid}`]) {
+		try {
+			await fs("PATCH", `${path}?updateMask.fieldPaths=photo&currentDocument.exists=true`, { fields: { photo: encode(0) } });
+		} catch (e) {
+			if (e.status !== 400 && e.status !== 404) throw e; // No entry there: nothing to clear.
+		}
+	}
+}
 
 // --- Leaderboard ---------------------------------------------------------
 
@@ -419,13 +524,15 @@ async function showPlayer(uid) {
 	if (!uid) return showPlayers();
 	view.innerHTML = `<p class="loading">Loading player…</p>`;
 	try {
-		const [doc, lbDoc, renames] = await Promise.all([
+		const [doc, lbDoc, renames, photoDoc, reviewDoc] = await Promise.all([
 			getDoc(`scores/${encodeURIComponent(uid)}`),
 			getDoc(`leaderboard/${encodeURIComponent(uid)}`),
 			runQuery({
 				from: [{ collectionId: "username_changes" }],
 				where: { fieldFilter: { field: { fieldPath: "uid" }, op: "EQUAL", value: { stringValue: uid } } },
 			}).catch(() => []),
+			getDoc(`photos/${encodeURIComponent(uid)}`).catch(() => null),
+			getDoc(`photo_reviews/${encodeURIComponent(uid)}?mask.fieldPaths=status&mask.fieldPaths=reason&mask.fieldPaths=sent_at`).catch(() => null),
 		]);
 		if (!doc) {
 			view.innerHTML = `<div class="card"><h2>No profile</h2><p>There's no <code>scores/${esc(uid)}</code> document. It may be a guest, or a deleted account.</p></div>`;
@@ -435,6 +542,8 @@ async function showPlayer(uid) {
 		P = {
 			uid, orig, draft: clone(orig), updateTime: doc.updateTime,
 			lb: lbDoc ? decodeFields(lbDoc.fields) : null,
+			photo: photoDoc ? decodeFields(photoDoc.fields) : null,
+			review: reviewDoc ? decodeFields(reviewDoc.fields) : null,
 			renames: renames.map((d) => decodeFields(d.fields)).sort((a, b) => (a.changed_at || "").localeCompare(b.changed_at || "")),
 		};
 		leaveGuard = () => P && P.uid === uid && changedPaths().length > 0;
@@ -626,6 +735,16 @@ function renderPlayer() {
 			</section>
 
 			<section class="card">
+				<h2>Profile picture</h2>
+				${P.photo ? `<div class="photo-current"><img src="data:image/jpeg;base64,${esc(P.photo.data)}" alt="" width="96" height="96">
+					<div><span class="muted small">Approved ${esc(when(P.photo.approved_at))}</span><br>
+					<button class="btn ghost small" type="button" id="remove-photo">Remove picture</button></div></div>`
+					: `<p class="muted">No approved picture: their cat shows.</p>`}
+				${P.review?.status === "pending" ? `<p><a href="#/pictures">One is waiting for review</a> (sent ${esc(when(P.review.sent_at))}).</p>` : ""}
+				${P.review?.status === "denied" ? `<p class="muted small">Last one denied${P.review.reason ? `: ${esc(P.review.reason)}` : "."}</p>` : ""}
+			</section>
+
+			<section class="card">
 				<h2>Account</h2>
 				<div class="fields">
 					<span>Username</span><span>${esc(o.username || "")}</span>
@@ -659,6 +778,15 @@ function renderPlayer() {
 		showPlayer(P.uid);
 	});
 	$("#toggle-hidden")?.addEventListener("click", toggleHidden);
+	$("#remove-photo")?.addEventListener("click", async () => {
+		if (!confirm("Take this player's picture down? Their cat shows again.")) return;
+		try {
+			await removePicture(P.uid);
+			P.photo = null;
+			toast("Picture removed");
+			renderPlayer();
+		} catch (e) { toast(e.message, true); }
+	});
 	$("#discard").addEventListener("click", () => { P.draft = clone(P.orig); renderPlayer(); });
 	$("#save").addEventListener("click", savePlayer);
 }
