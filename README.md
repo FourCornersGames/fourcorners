@@ -53,6 +53,8 @@ A free tracker page, plain HTML, CSS and JavaScript, no build step. Not listed i
 
 - `shophand/app/domain.js`, `state.js`, `sync.js`: rules, the save and the sync (no DOM). Run the tests
   with `node shophand/app/tests/run.js` (plain Node).
+  Every cloud write carries the cloud version (Firestore `updateTime`) as a precondition. The page also checks the cloud
+  when the player comes back. See "Save and sync rule" in `docs/WEB_PLAN.md`.
 - `shophand/app/ui.js`, `screens.js`, `app.js`, `app.css`: the page. `cloud.js`: sign-in and the Firestore
   REST calls. `art.js`: images for the owner only (read from Firestore, never in this repo).
 - `shophand/app/vendor/`: the self-hosted Firebase Auth SDK files (no CDN). The page talks to Google's

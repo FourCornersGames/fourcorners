@@ -39,12 +39,16 @@
 	function offlineErr() { var e = new Error('offline'); e.code = 'offline'; return e; }
 	var cloudAdapter = {
 		getSave: function (uid) { return SH.cloud && SH.cloud.available ? SH.cloud.getSave(uid) : Promise.reject(offlineErr()); },
-		setSave: function (uid, p) { return SH.cloud && SH.cloud.available ? SH.cloud.setSave(uid, p) : Promise.reject(offlineErr()); }
+		setSave: function (uid, p, expect) { return SH.cloud && SH.cloud.available ? SH.cloud.setSave(uid, p, expect) : Promise.reject(offlineErr()); }
 	};
 
 	/* ---------- conflict question ---------- */
 
+	// Two questions, one look. Same account (changed on another device, found by a refused write or by the check when the player
+	// comes back): "Load newer progress" or "Keep this device". Escape, Back or a tap outside = no choice: nothing is written,
+	// and the page asks again at the next check. A sign-in to another account keeps its own words below.
 	function askConflict(info) {
+		if (info.sameAccount) return askChangedElsewhere(info);
 		var lines = [];
 		lines.push(info.sameAccount ? t('This device and your account both changed. Choose which data to keep.') : t('You signed in to an account that already has data. Choose which data to keep.'));
 		lines.push(t('This device: %d droids owned, rebirth %d.', info.local.droids, info.local.rebirth));
@@ -54,6 +58,22 @@
 			{ value: 'cloud', label: t('Keep the data of my account'), cls: 'primary' },
 			{ value: 'local', label: t('Keep the data on this device') },
 			{ value: null, label: t('Decide later') }]);
+	}
+
+	function askChangedElsewhere(info) {
+		return new Promise(function (resolve) {
+			var picked = null;
+			var title = t('Changed on another device');
+			ui.sheet(title, function (body, close) {
+				body.appendChild(h('p', { class: 'sheet-text' }, t('Your progress was changed on another device. Load the newer progress, or keep the progress on this device?')));
+				body.appendChild(h('p', { class: 'dim small' }, t('This device: %d droids owned, rebirth %d.', info.local.droids, info.local.rebirth)));
+				body.appendChild(h('p', { class: 'dim small' }, t('Your account: %d droids owned, rebirth %d.', info.cloud.droids, info.cloud.rebirth) + (info.cloud.updated ? ' ' + t('Saved %s.', new Date(info.cloud.updated).toLocaleString(LANG)) : '')));
+				body.appendChild(h('div', { class: 'sheet-actions stack' },
+					h('button', { class: 'btn primary', type: 'button', onclick: function () { picked = 'cloud'; close(); } }, t('Load newer progress')),
+					h('button', { class: 'btn', type: 'button', onclick: function () { picked = 'local'; close(); } }, t('Keep this device'))));
+				body.appendChild(h('p', { class: 'dim small' }, t('The other copy is saved as a backup in About.')));
+			}, { cls: 'compact', onClose: function () { resolve(picked); } });
+		});
 	}
 
 	/* ---------- helpers ---------- */
@@ -544,8 +564,12 @@
 		views.upgrades = SH.screens.upgrades();
 		views.info = SH.screens.info();
 		TABS.forEach(function (tab) { views[tab].el.hidden = true; els.view.appendChild(views[tab].el); });
-		window.addEventListener('online', function () { C.sync.retryNow(); });
-		document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') C.sync.flush(); else C.sync.retryNow(); });
+		// The player comes back: look at the cloud first (at most every 15 s, see sync.checkCloud). A save waiting to be
+		// written cannot overwrite newer cloud data, because every write carries the cloud version (precondition).
+		window.addEventListener('online', function () { C.sync.checkCloud({ force: true }); });
+		document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') C.sync.flush(); else C.sync.checkCloud(); });
+		window.addEventListener('pageshow', function (e) { if (e.persisted) C.sync.checkCloud(); });
+		window.addEventListener('focus', function () { C.sync.checkCloud(); });
 		window.addEventListener('pagehide', function () { C.sync.flush(); });
 		route();
 		if (location.hash === '#about') openAbout();

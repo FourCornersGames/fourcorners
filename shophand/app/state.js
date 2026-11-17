@@ -3,10 +3,12 @@
    No DOM here. Works in the browser (window.SH.state) and in Node (require), so the tests run with plain Node.
 
    SAVE AND SYNC RULE (decided in W4, see docs/WEB_PLAN.md; the code is in sync.js):
-   - The local record (localStorage "shophand.save") is {v, state, dirty, cloudSeen, uid, name, edited}.
+   - The local record (localStorage "shophand.save") is {v, state, dirty, cloudSeen, cloudVer, uid, name, edited}.
      "dirty" = a change on this device that the cloud has not got yet. "cloudSeen" = the cloud "updated" time (ms,
      server clock) that this device last saw or wrote. "edited" is for display only. A flag, not a clock
      comparison, decides what changed: the device clock and the server clock can differ.
+     "cloudVer" = the exact cloud document version (the Firestore updateTime, an opaque string) that this device last
+     saw or wrote. Every cloud write carries it as a precondition, so a write over a newer cloud save is refused.
      Cloud doc: users/{uid} = {schema: 1, state, updated: server time, name, kind}. kind = guest, google or email.
    - Every change is written to localStorage at once. The cloud write is debounced (about 2 s) and retried when it fails.
    - On sign-in or start, compare with the cloud doc (decideSync):
@@ -14,7 +16,8 @@
        cloud unchanged since seen -> push local if dirty, else nothing
        cloud changed, local clean -> take the cloud data
        both changed               -> ask the user which to keep. The other one is saved as a backup first.
-   - Nothing is dropped without the user choosing. */
+   - A refused write (the cloud changed) and the check when the player comes back (page visible, focus, pageshow, online)
+     run the same compare. Nothing is dropped without the user choosing. */
 (function (root, factory) {
 	'use strict';
 	var dom = typeof module === 'object' && module.exports ? require('./domain.js') : root.SH.domain;
@@ -502,14 +505,15 @@
 
 	/* ---------- sync decision (pure) ---------- */
 
-	// local: {dirty, cloudSeen, uid, empty}. cloud: null or {updated (ms)}. uid: the signed-in uid.
+	// local: {dirty, cloudSeen, cloudVer, uid, empty}. cloud: null or {updated (ms), version}. uid: the signed-in uid.
 	// "dirty" = a change on this device that the cloud has not got yet. (A flag, not a time: the device clock
 	// and the server clock can differ.) Returns "none", "push", "pull" or "conflict".
 	function decideSync(local, cloud, uid) {
 		if (!cloud) return local.empty ? 'none' : 'push';
 		if (local.empty) return 'pull';
 		if (local.uid !== uid) return 'conflict';
-		var cloudChanged = cloud.updated > (local.cloudSeen || 0);
+		// The exact version (the Firestore updateTime) when both sides have one. Older saves only have the time in ms.
+		var cloudChanged = local.cloudVer && cloud.version ? cloud.version !== local.cloudVer : cloud.updated > (local.cloudSeen || 0);
 		if (!cloudChanged) return local.dirty ? 'push' : 'none';
 		return local.dirty ? 'conflict' : 'pull';
 	}
