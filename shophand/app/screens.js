@@ -466,13 +466,20 @@
 			c.appendChild(headRow);
 			c.appendChild(h('p', null, t('Credits needed: %s', ui.num(row.credits_required))));
 			var reqs = dom.requirementsFromRow(row);
-			reqs.forEach(function (s) {
+			reqs.forEach(function (s, i) {
 				var did = String(s.droid_id), d = droid(did), tid = s.tier_id;
 				var after = dom.afterUse(n, did, tid, pathRows, tierOrder);
 				var afterTxt = dom.afterUseText(after, ui.tierName(after.tier_id), { t: t, f: t });
-				c.appendChild(h('div', { class: 'req' }, ui.tile(d, 'md', true, tid || ''),
+				var path = pathNow(), got = ps().rebirthCheck(path, n, i), nm = d ? rawName(d) : ui.plain(did);
+				// A button: tap to mark this required droid as obtained, tap again to clear. The state shows as a check mark and a word, not only colour.
+				c.appendChild(h('button', { class: 'req req-check' + (got ? ' got' : ''), type: 'button', 'aria-pressed': String(got), 'data-fk': 'rbc-' + n + '-' + i,
+					'aria-label': nm + ', ' + (tid == null ? t('any variant') : ui.tierName(tid)) + ': ' + (got ? t('Obtained') : t('Not obtained yet')),
+					onclick: function () { ps().toggleRebirthCheckWithUndo(path, n, i); } },
+					// The check box comes first, left of the image. Obtained = a filled box with a check mark (shape, not only colour).
+					h('span', { class: 'req-mark', 'aria-hidden': 'true' }, h('span', { class: 'req-box' }, got ? ui.ico('check', 'req-ico') : null)),
+					ui.tile(d, 'md', true, tid || ''),
 					h('div', { class: 'grow' },
-						h('div', { class: 'req-name' }, d ? rawName(d) : ui.plain(did)),
+						h('div', { class: 'req-name' }, nm),
 						h('div', { class: 'req-tags' }, ui.tag(tid == null ? t('any variant') : ui.tierName(tid), tid == null ? null : ui.vVar(tid)), h('span', { class: 'dim small' }, t('then')),
 							after.action === 'upgrade' ? ui.tag(afterTxt, ui.vVar(after.tier_id)) : ui.tag(afterTxt)))));
 			});

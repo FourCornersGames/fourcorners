@@ -19,13 +19,36 @@
 
 	/* ---------- auth ---------- */
 
-	cloud.init = function (lang) {
+	// The Firebase sign-in files are loaded only after the player turns on online saving (see consent.js).
+	// Before that, the page makes no request to Firebase or Google.
+	var VENDOR = ['/shophand/app/vendor/firebase-app-compat.js', '/shophand/app/vendor/firebase-auth-compat.js'];
+	var loading = null;
+	function loadScript(src) {
+		return new Promise(function (resolve, reject) {
+			var s = document.createElement('script');
+			s.src = src; s.async = false;
+			s.onload = function () { resolve(); };
+			s.onerror = function () { loading = null; reject(codeError('Script not loaded', 'offline')); };
+			document.head.appendChild(s);
+		});
+	}
+	cloud.load = function () {
+		if (typeof firebase !== 'undefined') return Promise.resolve();
+		if (!loading) loading = VENDOR.reduce(function (p, src) { return p.then(function () { return loadScript(src); }); }, Promise.resolve());
+		return loading;
+	};
+
+	// wantGuest(): true only while the player has online saving turned on. A guest account is never made without it.
+	var wantGuest = function () { return false; };
+	cloud.init = function (lang, wantGuestFn) {
+		if (wantGuestFn) wantGuest = wantGuestFn;
+		if (auth) { auth.languageCode = lang; return true; }
 		if (typeof firebase === 'undefined') return false;
 		try {
 			if (!firebase.apps.length) firebase.initializeApp(cfg);
 			auth = firebase.auth();
 			auth.languageCode = lang;
-		} catch (e) { console.warn('Firebase did not start:', e); return false; }
+		} catch (e) { console.warn('Firebase did not start:', e); auth = null; return false; }
 		cloud.available = true;
 		auth.onAuthStateChanged(function (user) {
 			firstState = true;
@@ -34,6 +57,14 @@
 		});
 		window.addEventListener('online', function () { if (auth && !auth.currentUser) ensureGuest(); });
 		return true;
+	};
+	// Turn on: load the sign-in files, start, wait for the saved sign-in (if any), then make the guest account.
+	// Rejects with .code on failure.
+	cloud.enable = function (lang, wantGuestFn) {
+		return cloud.load().then(function () {
+			if (!cloud.init(lang, wantGuestFn)) throw codeError('Sign-in did not start', 'no-auth');
+			return new Promise(function (resolve) { var off = auth.onAuthStateChanged(function (u) { off(); resolve(u); }); });
+		}).then(function (u) { return u ? null : signInGuest(); });
 	};
 	cloud.onUser = function (fn) { userListeners.push(fn); };
 	cloud.user = function () { return auth ? auth.currentUser : null; };
@@ -57,13 +88,19 @@
 		return st.accountKind((u.providerData || []).map(function (p) { return p.providerId; }));
 	};
 
-	// Start as a guest (anonymous) so saving works at once. Retries when the network comes back.
+	// One sign-in at a time, so two callers never make two guest accounts.
+	var guestPromise = null;
+	function signInGuest() {
+		if (!guestPromise) guestPromise = auth.signInAnonymously().then(function (r) { guestPromise = null; return r; }, function (e) { guestPromise = null; throw e; });
+		return guestPromise;
+	}
+	// Make a guest (anonymous) account, only when wantGuest() says the player turned on online saving. Retries when the network comes back.
 	function ensureGuest() {
-		if (!auth || auth.currentUser || guestTimer) return;
+		if (!auth || auth.currentUser || guestTimer || guestPromise || !wantGuest()) return;
 		guestTimer = setTimeout(function () {
 			guestTimer = null;
-			if (auth.currentUser) return;
-			auth.signInAnonymously().catch(function (e) {
+			if (auth.currentUser || !wantGuest()) return;
+			signInGuest().catch(function (e) {
 				console.warn('Guest sign-in failed:', e && e.code);
 				guestTimer = setTimeout(function () { guestTimer = null; ensureGuest(); }, 15000);
 			});
@@ -117,7 +154,7 @@
 			throw codeError('No credential to switch with', 'no-credential');
 		}).then(function () { return { ok: true }; });
 	};
-	cloud.signOut = function () { return auth.signOut(); };
+	cloud.signOut = function () { return auth ? auth.signOut() : Promise.resolve(); };
 	// Delete the save document, then the auth user. Resolves {ok:true}, {needsRecentLogin:true}.
 	cloud.deleteAccount = function () {
 		var u = auth.currentUser, uid = u.uid;

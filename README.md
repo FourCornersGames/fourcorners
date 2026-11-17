@@ -56,7 +56,24 @@ A free tracker page, plain HTML, CSS and JavaScript, no build step. Not listed i
 - `shophand/app/ui.js`, `screens.js`, `app.js`, `app.css`: the page. `cloud.js`: sign-in and the Firestore
   REST calls. `art.js`: images for the owner only (read from Firestore, never in this repo).
 - `shophand/app/vendor/`: the self-hosted Firebase Auth SDK files (no CDN). The page talks to Google's
-  Firebase servers, so W5 must update the cookie and privacy pages.
+  Firebase servers only after the player turns on online saving (see "Consent rule" below).
+- **Consent rule (W5).** The page is local-only by default. Before the player opts in, it loads no Firebase
+  script, signs nobody in and makes no request to Google or Firebase. `consent.js` keeps the choice in
+  localStorage key `shophand.consent` (`{v: policy version, at: ISO date, age14: true}`); the choice stays on
+  the device (it is not written to Firestore). The opt-in sheet (About, Online saving) needs a ticked
+  "14 or older, or a parent agrees" box. `cloud.js` loads `vendor/` lazily and never makes a guest account
+  unless consent is stored. Turning off, signing out or deleting the account clears the consent and never
+  makes a new guest. Check with the browser network log after any change to the load path.
+  Never add a Google or Firebase request to the load path.
+- Legal pages: `shophand/privacy.html`, `terms.html`, `delete-account.html` and the French twins
+  `fr/shophand/confidentialite.html`, `conditions.html`, `supprimer-compte.html` (from the reviewed drafts in
+  `docs/POLICY_DRAFTS.md` in the app repo). All are `noindex` while the page is a test, so
+  `tools/sitemap.py` skips them. Set the policy date in `shophand/app/consent.js` (`POLICY_VERSION`) when the
+  policy text changes in a way that needs new consent. The Firestore database is in Montreal
+  (`northamerica-northeast1`); Firebase Authentication is processed by Google (US). The cookie pages
+  mention Shop Hand: keep them in step.
+- Retention: `tools/retention.py` in the app repo deletes inactive accounts (guest 12 months, linked
+  24 months). Run it every three months.
 - `shophand/app/strings.js` and `shophand/data/gamedata.json` are made by `tools/export_web.py` in the app
   repo. Do not edit them by hand. The page must never contain the game's name or any droid image.
 
