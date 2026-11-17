@@ -1,6 +1,7 @@
 /* Shop Hand private art (milestone W4, owner only).
    The droid images are never in the site files. After sign-in the page tries to read the Firestore collection
-   private_art. The rules allow it only for an account listed in art_readers (set by the studio, not by the page).
+   private_art (first the index document private_art_index/main, 1 read; the listing only when the index is
+   missing). The rules allow it only for an account listed in art_readers (set by the studio, not by the page).
    The page first reads its own art_readers record (a "missing" answer is a normal "no", no console error). Only a
    trusted account goes on: the images go in IndexedDB and show instead of the letter tiles. Anyone else stays with
    the letter tiles and makes no image request. The cache is cleared on sign-out, on a denied read and when the
@@ -8,7 +9,7 @@
 (function () {
 	'use strict';
 	var SH = window.SH = window.SH || {};
-	var DB = 'shophand-art', STORE = 'png', META = 'meta';
+	var DB = 'shophand-art', STORE = 'png', META = 'meta', CHUNK = 10;
 	var urls = Object.create(null);   // id -> blob URL
 	var listeners = [];
 	var dbp = null, checkedUid = '', running = false;
@@ -94,26 +95,31 @@
 		return cloud.isTrusted(uid).then(function (yes) {
 			if (!yes) return art.clear().then(function () { checkedUid = uid; return null; });   // clear() resets checkedUid, so set it after
 			return showCache().then(function () {
-				return cloud.listArt();
+				// The index document is 1 read for all ids. When it is missing, list private_art as before (1 read for each image).
+				return cloud.getArtIndex().then(function (idx) { return idx || cloud.listArt(); });
 			});
 		}).then(function (list) {
 			if (!list) return;   // not trusted: letter tiles, no image request was made
-			// Allowed. Fetch the new or changed images, 4 at a time.
+			// Allowed. Fetch only the new or changed images: CHUNK documents in one request, 3 requests at a time.
 			var todo = list.filter(function (x) { return !(x.id in cached) || (x.updated && x.updated > cached[x.id]); });
-			var i = 0;
+			var chunks = [], i = 0;
+			for (var c = 0; c < todo.length; c += CHUNK) chunks.push(todo.slice(c, c + CHUNK));
 			function worker() {
-				if (i >= todo.length) return Promise.resolve();
-				var item = todo[i++];
-				return cloud.getArt(item.id).then(function (b64) {
-					if (!b64) return;
-					var blob = b64ToBlob(b64);
-					setUrl(item.id, blob);
-					return tx(STORE, 'readwrite', function (s) { return s.put({ blob: blob, updated: item.updated }, item.id); }).catch(function () { /* no room: it still shows this session */ });
-				}).catch(function () { /* one image failed: the others still load */ }).then(worker);
+				if (i >= chunks.length) return Promise.resolve();
+				var items = chunks[i++];
+				return cloud.getArtMany(items.map(function (x) { return x.id; })).then(function (got) {
+					return Promise.all(items.map(function (item) {
+						var b64 = got[item.id];
+						if (!b64) return;
+						var blob = b64ToBlob(b64);
+						setUrl(item.id, blob);
+						return tx(STORE, 'readwrite', function (s) { return s.put({ blob: blob, updated: item.updated }, item.id); }).catch(function () { /* no room: it still shows this session */ });
+					}));
+				}).catch(function () { /* one chunk failed: the others still load, the next sign-in tries it again */ }).then(worker);
 			}
 			var gone = Object.keys(urls).filter(function (k) { return !list.some(function (x) { return x.id === k; }); });
 			gone.forEach(function (k) { URL.revokeObjectURL(urls[k]); delete urls[k]; });
-			return Promise.all([worker(), worker(), worker(), worker()]).then(function () {
+			return Promise.all([worker(), worker(), worker()]).then(function () {
 				return tx(META, 'readwrite', function (s) { return s.put(uid, 'uid'); }).catch(function () {});
 			}).then(function () { checkedUid = uid; notify(); });
 		}, function (err) {

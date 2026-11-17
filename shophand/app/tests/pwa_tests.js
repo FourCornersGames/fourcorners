@@ -154,6 +154,9 @@ function fakeCloud(trusted, opts) {
 	c.isTrusted = function () { c.trustedCalls++; return opts.trustedError ? Promise.reject(opts.trustedError) : Promise.resolve(trusted); };
 	c.listArt = function () { c.listCalls++; return opts.listError ? Promise.reject(opts.listError) : Promise.resolve([{ id: 'bb_8', updated: 5 }, { id: 'r2_d2', updated: 6 }]); };
 	c.getArt = function () { c.getCalls++; return Promise.resolve('aGk='); };
+	// The index is missing here (null), so these tests use the old listing. The index path is in art_tests.js.
+	c.getArtIndex = function () { return Promise.resolve(null); };
+	c.getArtMany = function (ids) { var out = {}; ids.forEach(function (id) { c.getCalls++; out[id] = 'aGk='; }); return Promise.resolve(out); };
 	return c;
 }
 

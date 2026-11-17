@@ -533,7 +533,7 @@ var cost = function (a, b) { return dom.costFor(a, b, gd.incomeByKey, gd.droidsB
 })();
 
 var h = { ok: ok, eq: eq, gd: gd, newPs: newPs };
-require('./sync_tests.js').run(h).then(function () { return require('./consent_tests.js').run(h); }).then(function () { return require('./pwa_tests.js').run(h); }).then(function () {
+require('./sync_tests.js').run(h).then(function () { return require('./consent_tests.js').run(h); }).then(function () { return require('./pwa_tests.js').run(h); }).then(function () { return require('./art_tests.js').run(h); }).then(function () {
 	console.log(passed + ' passed, ' + failed + ' failed');
 	process.exit(failed ? 1 : 0);
 }, function (e) { console.log('FAIL: sync tests crashed: ' + (e && e.stack || e)); process.exit(1); });

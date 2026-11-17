@@ -89,6 +89,7 @@
 	}
 	function syncText(s) {
 		switch (s) {
+			case 'pending': return t('Some changes are not saved yet');
 			case 'syncing': return t('Saving to your account…');
 			case 'synced': return t('Saved on this device and in your account.');
 			case 'offline': return t('Offline. Your changes are saved on this device. They go to your account when the connection is back.');
@@ -576,12 +577,11 @@
 		views.upgrades = SH.screens.upgrades();
 		views.info = SH.screens.info();
 		TABS.forEach(function (tab) { views[tab].el.hidden = true; els.view.appendChild(views[tab].el); });
-		// The player comes back: look at the cloud first (at most every 15 s, see sync.checkCloud). A save waiting to be
+		// The player comes back: look at the cloud first (at most every 60 s, see sync.checkCloud). A save waiting to be
 		// written cannot overwrite newer cloud data, because every write carries the cloud version (precondition).
 		window.addEventListener('online', function () { C.sync.checkCloud({ force: true }); });
 		document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') C.sync.flush(); else C.sync.checkCloud(); });
 		window.addEventListener('pageshow', function (e) { if (e.persisted) C.sync.checkCloud(); });
-		window.addEventListener('focus', function () { C.sync.checkCloud(); });
 		window.addEventListener('pagehide', function () { C.sync.flush(); });
 		// Two tabs of one browser share the local save. The browser tells the other tabs when one tab writes it.
 		// Save changed: take it and redraw. Online saving turned on or off, or the site data cleared: reload, so

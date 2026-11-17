@@ -247,7 +247,7 @@
 	};
 	cloud.deleteSave = function (uid) { return fs('DELETE', BASE + '/users/' + encodeURIComponent(uid)).then(function () { return true; }); };
 
-	// Private art: ids and update times only (small), then single documents. Throws code "denied" for anyone but the owner.
+	// Private art: the index (1 read) or, when it is missing, the listing (1 read each); then the images in chunks. Throws code "denied" for anyone but the owner.
 	cloud.listArt = function () {
 		var out = [];
 		function page(token) {
@@ -260,6 +260,37 @@
 			});
 		}
 		return page('');
+	};
+	// The art index: one document private_art_index/main = { items: { id: updated }, updated } (1 read for all ids).
+	// updated is milliseconds (integer) or an ISO time. Resolves [{id, updated (ms)}], or null when the index is missing or empty
+	// (the caller then lists private_art as before). Throws code "denied" for anyone but a trusted player.
+	cloud.getArtIndex = function () {
+		return fs('POST', BASE + ':batchGet', { documents: [DB_NAME + '/private_art_index/main'] }).then(function (r) {
+			var found = st.firstFound(r.json);
+			var items = found && found.fields && found.fields.items && found.fields.items.mapValue && found.fields.items.mapValue.fields;
+			if (!items) return null;
+			var out = [];
+			Object.keys(items).forEach(function (id) {
+				var v = items[id] || {}, t = 0;
+				if (v.integerValue !== undefined) t = Number(v.integerValue);
+				else if (v.doubleValue !== undefined) t = Number(v.doubleValue);
+				else if (v.timestampValue) t = ms(v.timestampValue);
+				else if (v.stringValue) t = ms(v.stringValue) || Number(v.stringValue);
+				out.push({ id: id, updated: isFinite(t) && t > 0 ? t : 0 });
+			});
+			return out.length ? out : null;
+		});
+	};
+	// Several images in one request (:batchGet). Resolves {id: base64}. A missing document is left out.
+	cloud.getArtMany = function (ids) {
+		return fs('POST', BASE + ':batchGet', { documents: ids.map(function (id) { return DB_NAME + '/private_art/' + id; }), mask: { fieldPaths: ['png_b64'] } }).then(function (r) {
+			var out = {};
+			(Array.isArray(r.json) ? r.json : []).forEach(function (x) {
+				var f = x && x.found;
+				if (f && f.fields && f.fields.png_b64 && f.fields.png_b64.stringValue) out[f.name.split('/').pop()] = String(f.fields.png_b64.stringValue);
+			});
+			return out;
+		});
 	};
 	cloud.getArt = function (id) {
 		return fs('GET', BASE + '/private_art/' + encodeURIComponent(id)).then(function (r) {

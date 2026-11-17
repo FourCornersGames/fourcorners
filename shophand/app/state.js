@@ -16,7 +16,7 @@
        cloud unchanged since seen -> push local if dirty, else nothing
        cloud changed, local clean -> take the cloud data
        both changed               -> ask the user which to keep. The other one is saved as a backup first.
-   - A refused write (the cloud changed) and the check when the player comes back (page visible, focus, pageshow, online)
+   - A refused write (the cloud changed) and the check when the player comes back (page visible, pageshow, online)
      run the same compare. Nothing is dropped without the user choosing. */
 (function (root, factory) {
 	'use strict';
