@@ -688,10 +688,10 @@ button.req-check { width: 100%; min-height: 3.5rem; text-align: left; color: inh
 	background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); }
 button.req-check:hover { border-color: var(--accent-text); }
 button.req-check.got { border-color: var(--green); background: color-mix(in srgb, var(--green) 16%, var(--bg)); }
-.req-mark { display: inline-flex; align-items: center; gap: 0.375rem; flex: none; font-weight: 700; font-size: 0.875rem; max-width: 6.5rem; text-align: left; line-height: 1.1; color: var(--text-dim); }
-.req-check.got .req-mark { color: var(--green); }
-.req-box { width: 1.375rem; height: 1.375rem; border: 2px solid var(--text-dim); border-radius: 0.375rem; flex: none; }
-.req-ico { width: 1.375rem; height: 1.375rem; flex: none; }
+.req-mark { display: inline-flex; align-items: center; flex: none; padding: 0 0.125rem; }
+.req-box { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border: 2px solid var(--text-dim); border-radius: 0.4375rem; flex: none; }
+.req-check.got .req-box { border-color: var(--green); background: var(--green); color: #07140d; }
+.req-ico { width: 1.25rem; height: 1.25rem; flex: none; stroke-width: 3; }
 
 /* W5: account button in the top bar (online-saving status at a glance) */
 .top-actions { min-width: 0; }

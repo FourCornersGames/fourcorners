@@ -475,12 +475,13 @@
 				c.appendChild(h('button', { class: 'req req-check' + (got ? ' got' : ''), type: 'button', 'aria-pressed': String(got), 'data-fk': 'rbc-' + n + '-' + i,
 					'aria-label': nm + ', ' + (tid == null ? t('any variant') : ui.tierName(tid)) + ': ' + (got ? t('Obtained') : t('Not obtained yet')),
 					onclick: function () { ps().toggleRebirthCheckWithUndo(path, n, i); } },
+					// The check box comes first, left of the image. Obtained = a filled box with a check mark (shape, not only colour).
+					h('span', { class: 'req-mark', 'aria-hidden': 'true' }, h('span', { class: 'req-box' }, got ? ui.ico('check', 'req-ico') : null)),
 					ui.tile(d, 'md', true, tid || ''),
 					h('div', { class: 'grow' },
 						h('div', { class: 'req-name' }, nm),
 						h('div', { class: 'req-tags' }, ui.tag(tid == null ? t('any variant') : ui.tierName(tid), tid == null ? null : ui.vVar(tid)), h('span', { class: 'dim small' }, t('then')),
-							after.action === 'upgrade' ? ui.tag(afterTxt, ui.vVar(after.tier_id)) : ui.tag(afterTxt))),
-					h('span', { class: 'req-mark' }, got ? ui.ico('check', 'req-ico') : h('span', { class: 'req-box', 'aria-hidden': 'true' }), h('span', { class: 'req-word' }, got ? t('Obtained') : t('Tap when obtained')))));
+							after.action === 'upgrade' ? ui.tag(afterTxt, ui.vVar(after.tier_id)) : ui.tag(afterTxt)))));
 			});
 			if (!reqs.length) c.appendChild(h('p', { class: 'dim small' }, t('Required droids: unknown')));
 			c.appendChild(h('p', { class: 'dim small' }, t('Reward: %s', ui.plain(row.reward))));
