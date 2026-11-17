@@ -1,4 +1,4 @@
-/* Shop Hand dev panel (Firebase project shophand-fcg; the page is /shophand/).
+/* Bolt Bucket dev panel (Firebase project shophand-fcg; the page is https://boltbucket.fourcornersgames.ca).
  *
  * The players (every users/{uid} document, newest save first), a player page (name, uid, kind,
  * a short summary, the whole save as JSON, a backup download, a rename) and the Trusted switch
@@ -15,7 +15,7 @@
  */
 "use strict";
 
-const API_KEY = "AIzaSyDyinZnuBvonwHGqq-DsD3dV9KuQ4Uyg9k"; // Public, same as /shophand/app/firebase-config.js.
+const API_KEY = "AIzaSyDyinZnuBvonwHGqq-DsD3dV9KuQ4Uyg9k"; // Public, same as web/app/firebase-config.js in the app repo.
 const PROJECT_ID = "shophand-fcg";
 const DB_NAME = `projects/${PROJECT_ID}/databases/(default)/documents`;
 const FS = `https://firestore.googleapis.com/v1/${DB_NAME}`;
@@ -116,7 +116,7 @@ function toPlayer(doc) {
 	};
 }
 
-// What the save holds, from the state shape in /shophand/app/state.js (toDict).
+// What the save holds, from the state shape in web/app/state.js in the app repo (toDict).
 function summarize(state) {
 	const owned = isObj(state.owned) ? state.owned : {};
 	let droids = 0, variants = 0;
@@ -269,7 +269,7 @@ async function boot() {
 	auth.email = auth.email || store(EMAIL_KEY) || store("dev-email") || "";
 	if (!auth.refreshToken) {
 		// One sign-in for every game: the gateway (/dev/) signs in and comes back here.
-		location.replace("/dev/#shophand");
+		location.replace("/dev/#boltbucket");
 		return;
 	}
 	view.innerHTML = `<p class="loading">Signing in…</p>`;
@@ -277,7 +277,7 @@ async function boot() {
 		await token();
 		const me = await getDoc(`admins/${auth.uid}`, "check admin access");
 		if (decodeFields(me?.fields).enabled !== true) {
-			throw new Error(`Signed in, but this account isn't a Shop Hand admin: it needs an admins/{uid} document with enabled: true (uid ${auth.uid}).`);
+			throw new Error(`Signed in, but this account isn't a Bolt Bucket admin: it needs an admins/{uid} document with enabled: true (uid ${auth.uid}).`);
 		}
 	} catch (e) {
 		auth.refreshToken = "";
@@ -366,7 +366,7 @@ async function showPlayers(reload = false) {
 
 // --- One player ---------------------------------------------------------------
 
-// The same JSON the Shop Hand page imports (its export format: state.js toDict).
+// The same JSON the Bolt Bucket page imports (its export format: state.js toDict).
 function backupText(p) { return JSON.stringify(p.state, null, 2); }
 
 async function showPlayer(uid) {
@@ -414,7 +414,7 @@ async function showPlayer(uid) {
 						<dt>Fusions in progress</dt><dd>${s.inProgress}</dd>
 					</dl>
 					<div class="toolbar" style="margin-top:12px"><button class="btn small" id="backup" type="button">Download backup</button></div>
-					<p class="muted small">The backup is the same file the Shop Hand page imports.</p>
+					<p class="muted small">The backup is the same file the Bolt Bucket page imports.</p>
 				</div>
 				<div class="card">
 					<h2>Trusted</h2>
@@ -440,7 +440,7 @@ async function showPlayer(uid) {
 		};
 		showTrusted();
 
-		$("#backup").addEventListener("click", () => download(`shop-hand-backup-${uid}-${new Date().toISOString().slice(0, 10)}.json`, backupText(p)));
+		$("#backup").addEventListener("click", () => download(`bolt-bucket-backup-${uid}-${new Date().toISOString().slice(0, 10)}.json`, backupText(p)));
 
 		$("#rename-form").addEventListener("submit", async (e) => {
 			e.preventDefault();

@@ -46,57 +46,21 @@ marked `noindex` (the redirect stubs). New pages need a `<title>`, a
 Fonts and images are all self-hosted, so visiting the site never contacts a
 third party (the privacy policies rely on that).
 
-## Shop Hand (`/shophand/`, `/fr/shophand/`)
+## Bolt Bucket moved (2026-11-17)
 
-A free tracker page, plain HTML, CSS and JavaScript, no build step. Not listed in the sitemap yet
-(`noindex`). Plan and rules: `docs/WEB_PLAN.md` in the app repo (`DroidTycoonCompanion`).
+Bolt Bucket (it was called Shop Hand) no longer lives in this repo. It is its own site:
+https://boltbucket.fourcornersgames.ca, on Firebase Hosting. Its code, tests, privacy pages and deploy
+script are in the app repo (`FourCornersGames/BoltBucket`, local folder `DroidTycoonCompanion`, folder `web/`).
+Do not add Bolt Bucket pages here.
 
-- `shophand/app/domain.js`, `state.js`, `sync.js`: rules, the save and the sync (no DOM). Run the tests
-  with `node shophand/app/tests/run.js` (plain Node).
-  Every cloud write carries the cloud version (Firestore `updateTime`) as a precondition. The page also checks the cloud
-  when the player comes back. See "Save and sync rule" in `docs/WEB_PLAN.md`.
-- `shophand/app/ui.js`, `screens.js`, `app.js`, `app.css`: the page. `cloud.js`: sign-in and the Firestore
-  REST calls. `art.js`: images for the owner only (read from Firestore, never in this repo).
-- `shophand/app/vendor/`: the self-hosted Firebase Auth SDK files (no CDN). The page talks to Google's
-  Firebase servers only after the player turns on online saving (see "Consent rule" below).
-- **Consent rule (W5).** The page is local-only by default. Before the player opts in, it loads no Firebase
-  script, signs nobody in and makes no request to Google or Firebase. `consent.js` keeps the choice in
-  localStorage key `shophand.consent` (`{v: policy version, at: ISO date, age14: true}`); the choice stays on
-  the device (it is not written to Firestore). The opt-in sheet (About, Online saving) needs a ticked
-  "14 or older, or a parent agrees" box. `cloud.js` loads `vendor/` lazily and never makes a guest account
-  unless consent is stored. Turning off, signing out or deleting the account clears the consent and never
-  makes a new guest. Check with the browser network log after any change to the load path.
-  Never add a Google or Firebase request to the load path.
-- Legal pages: `shophand/privacy.html`, `terms.html`, `delete-account.html` and the French twins
-  `fr/shophand/confidentialite.html`, `conditions.html`, `supprimer-compte.html` (from the reviewed drafts in
-  `docs/POLICY_DRAFTS.md` in the app repo). All are `noindex` while the page is a test, so
-  `tools/sitemap.py` skips them. Set the policy date in `shophand/app/consent.js` (`POLICY_VERSION`) when the
-  policy text changes in a way that needs new consent. The Firestore database is in Montreal
-  (`northamerica-northeast1`); Firebase Authentication is processed by Google (US). The cookie pages
-  mention Shop Hand: keep them in step.
-- **Release version (cache busting). Bump the version on every Shop Hand change** (code, strings, data, CSS, icons).
-  The version looks like `YYYYMMDD-n` (the date, then 1, 2, 3... for that day). It is written in four places and
-  must be the same in all of them (the tests check this):
-  1. `<meta name="sh-version" content="...">` in `shophand/index.html` and `fr/shophand/index.html`. This is the
-     one the page reads at run time (`SH.version`, `SH.versioned(url)` in `ui.js`) for the lazy vendor scripts and
-     the `gamedata.json` fetch.
-  2. every `?v=...` on the `/shophand/app/*` files in both index pages.
-  3. `version` in `shophand/sw.js` and `fr/shophand/sw.js`, and the `?v=` of their `importScripts`.
-  To bump: replace the old version text in those four places (search for it in `shophand/` and `fr/shophand/`),
-  then run the tests. A new `sw.js` makes browsers install a new service worker and a new cache.
-- **Installable web app (PWA).** `shophand/manifest.webmanifest` and `fr/shophand/manifest.webmanifest`, the
-  placeholder icons in `shophand/icons/` (a white S on the brand-tile colour; the owner replaces them),
-  `shophand/sw.js` (scope `/shophand/`) and `fr/shophand/sw.js` (scope `/fr/shophand/`). Both use
-  `shophand/app/sw-core.js`. The worker keeps only the site's own files in a cache named
-  `shophand-<lang>-<version>`, deletes old caches when it activates, loads the page network first (cache as
-  fallback) and the versioned files cache first. It never handles Google or Firebase hosts, other pages or `/dev/`
-  (see `route()` in `sw-core.js`, and its tests). A new worker waits: the page shows "A new version is ready.
-  Reload" (`pwa.js`) and never reloads by itself. If you add, rename or remove a file the page loads, change
-  `APP_FILES` in `sw-core.js` too (a test compares it with the index pages).
-- Retention: `tools/retention.py` in the app repo deletes inactive accounts (guest 12 months, linked
-  24 months). Run it every three months.
-- `shophand/app/strings.js` and `shophand/data/gamedata.json` are made by `tools/export_web.py` in the app
-  repo. Do not edit them by hand. The page must never contain the game's name or any droid image.
+- **The redirect stubs stay.** `/shophand/` and `/fr/shophand/` (index, privacy, terms, delete-account and the
+  French twins) are small redirect pages to the new site. They keep the `#fragment`. Never delete them: old links
+  and installed copies still use them.
+- `shophand/sw.js` and `fr/shophand/sw.js` are self-destroying service workers. They delete the old
+  `shophand*` caches, unregister themselves and send open pages to the new site. Keep them here for a long
+  time, so every browser that still has the old worker finds them. The old manifests are gone on purpose.
+- `cookies.html` and `fr/temoins.html` only say that Bolt Bucket has its own site and policy.
+- The dev panel stays here: `/dev/boltbucket/` (see "Dev panel" below). `/dev/shophand/` is a redirect stub.
 
 ## Studio-wide legal pages
 
@@ -273,14 +237,14 @@ the YarnToss panel, it only talks to Google's Firebase APIs once a dev signs in.
   overwrites it. Change `COUNTER_BUMP` / `encodeSave()` in `app.js` together
   with the game's `OnlineRules` if the save document's shape changes.
 
-## Dev panel (`/dev/shophand/`)
+## Dev panel (`/dev/boltbucket/`)
 
-A hidden page for the Shop Hand admins (Firebase project `shophand-fcg`, the page is `/shophand/`):
+A hidden page for the Bolt Bucket admins (Firebase project `shophand-fcg`; the page is https://boltbucket.fourcornersgames.ca; `/dev/shophand/` is a redirect stub to this panel):
 the players, a player page and the **Trusted** switch. Not linked from anywhere and marked `noindex`,
 but the URL is not the protection: everything goes through Firestore with the dev's own login, and the
 rules only allow it for accounts with `admins/{uid}` and `enabled: true` (`isAdmin()` in the app repo's
 `firebase/firestore.rules`; plan in `docs/WEB_PLAN.md`, "Dev panel"). Like the other panels, it only talks
-to Google's Firebase APIs once a dev signs in, and the `/dev/` gateway opens it (its Shop Hand card checks
+to Google's Firebase APIs once a dev signs in, and the `/dev/` gateway opens it (its Bolt Bucket card checks
 the `admins/{uid}` document).
 
 - **Privacy rule (owner decision, strict): the studio never sees players' emails or real names.** The panel
@@ -290,7 +254,7 @@ the `admins/{uid}` document).
 - **Players:** every `users` document, newest save first, 100 at a time with **Load more**. Search is by name
   and covers the rows loaded so far. Columns: name, kind, last save, droids owned, Trusted.
 - **Player page** (`#/player/<uid>`): name, uid, kind, last save, a summary of the save, the whole save as
-  JSON (collapsed), **Download backup** (the same JSON the Shop Hand page imports) and **Rename**. The rules
+  JSON (collapsed), **Download backup** (the same JSON the Bolt Bucket page imports) and **Rename**. The rules
   let an admin change only `name`, with `updated` set to the server time, so the player's device takes the
   new name at its next sync.
 - **Trusted:** on creates `art_readers/<uid>` (`{by, at}`, after a confirm), off deletes it. Trusted players

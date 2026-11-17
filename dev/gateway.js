@@ -45,7 +45,7 @@ const GAMES = [
 		},
 	},
 	{
-		id: "shophand", name: "Shop Hand", icon: "/favicon.svg", path: "/dev/shophand/",
+		id: "boltbucket", name: "Bolt Bucket", icon: "/favicon.svg", path: "/dev/boltbucket/",
 		apiKey: "AIzaSyDyinZnuBvonwHGqq-DsD3dV9KuQ4Uyg9k", project: "shophand-fcg",
 		refreshKey: "sh-dev-refresh", emailKey: "sh-dev-email",
 		need: "an admins/{uid} document with enabled: true",
