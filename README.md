@@ -46,6 +46,20 @@ marked `noindex` (the redirect stubs). New pages need a `<title>`, a
 Fonts and images are all self-hosted, so visiting the site never contacts a
 third party (the privacy policies rely on that).
 
+## Shop Hand (`/shophand/`, `/fr/shophand/`)
+
+A free tracker page, plain HTML, CSS and JavaScript, no build step. Not listed in the sitemap yet
+(`noindex`). Plan and rules: `docs/WEB_PLAN.md` in the app repo (`DroidTycoonCompanion`).
+
+- `shophand/app/domain.js`, `state.js`, `sync.js`: rules, the save and the sync (no DOM). Run the tests
+  with `node shophand/app/tests/run.js` (plain Node).
+- `shophand/app/ui.js`, `screens.js`, `app.js`, `app.css`: the page. `cloud.js`: sign-in and the Firestore
+  REST calls. `art.js`: images for the owner only (read from Firestore, never in this repo).
+- `shophand/app/vendor/`: the self-hosted Firebase Auth SDK files (no CDN). The page talks to Google's
+  Firebase servers, so W5 must update the cookie and privacy pages.
+- `shophand/app/strings.js` and `shophand/data/gamedata.json` are made by `tools/export_web.py` in the app
+  repo. Do not edit them by hand. The page must never contain the game's name or any droid image.
+
 ## Studio-wide legal pages
 
 `/cookies.html` (and `/fr/temoins.html`) says the site sets **no cookies**, has

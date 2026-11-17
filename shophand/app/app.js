@@ -1,347 +1,337 @@
-/* Shop Hand web page: layout shell (milestone W3). Vanilla JS, no build step.
+/* Shop Hand web page (milestone W4): start-up, routing, About and the account. Vanilla JS, no build step.
+   The pieces: domain.js (rules), state.js (the save), sync.js (local + cloud save), cloud.js (sign-in, Firestore REST),
+   art.js (owner-only images), ui.js (helpers), screens.js (the five tabs).
    Text comes from window.SH_STRINGS (made by tools/export_web.py in the app repo).
    Data comes from /shophand/data/gamedata.json (the public build only). */
 (function () {
 	'use strict';
+	var SH = window.SH, dom = SH.domain, st = SH.state, ui = SH.ui;
+	var t = ui.t, h = ui.h, clear = ui.clear, C = ui.ctx, LANG = ui.LANG;
 
-	var S = window.SH_STRINGS || {};
-	var LANG = (document.documentElement.lang || 'en').slice(0, 2) === 'fr' ? 'fr' : 'en';
 	var DATA_URL = '/shophand/data/gamedata.json';
 	var DISCLAIMER = 'This is an unofficial fan-made helper for a Fortnite creator-made island (island code 7865-8305-9184). It is not affiliated with or endorsed by Epic Games, Disney, Lucasfilm or FOAD.';
 	var NO_LOGOS = 'It uses no game logos and no key art. All names belong to their owners.';
 	var LEGAL = {
-		en: { privacy: '/shophand/privacy.html', terms: '/shophand/terms.html' },
-		fr: { privacy: '/fr/shophand/confidentialite.html', terms: '/fr/shophand/conditions.html' }
+		en: { privacy: '/shophand/privacy.html', terms: '/shophand/terms.html', home: '/' },
+		fr: { privacy: '/fr/shophand/confidentialite.html', terms: '/fr/shophand/conditions.html', home: '/fr/' }
 	}[LANG];
-
-	/* ---------- helpers ---------- */
-
-	// Look up a string by its key and fill in %s, %d and %.1f in order.
-	function t(key) {
-		var e = S[key];
-		var s = (e && e[LANG]) || key;
-		var args = arguments, i = 1;
-		return s.replace(/%(?:\.\d+)?[sdf]/g, function () { var v = args[i++]; return v == null ? '' : v; });
-	}
-	function hasKey(key) { return Object.prototype.hasOwnProperty.call(S, key); }
-
-	function h(tag, attrs) {
-		var e = document.createElement(tag);
-		if (attrs) {
-			Object.keys(attrs).forEach(function (k) {
-				var v = attrs[k];
-				if (v == null || v === false) return;
-				if (k === 'class') e.className = v;
-				else if (k === 'text') e.textContent = v;
-				else if (k === 'style') e.setAttribute('style', v);
-				else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
-				else e.setAttribute(k, v === true ? '' : v);
-			});
-		}
-		for (var i = 2; i < arguments.length; i++) {
-			var c = arguments[i];
-			if (c == null || c === false) continue;
-			e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
-		}
-		return e;
-	}
-	function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); return e; }
-	function slug(s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9_-]/g, ''); }
-	function norm(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
-	function isBlank(v) { return v == null || v === '' || (typeof v === 'number' && isNaN(v)); }
-
-	var nf = new Intl.NumberFormat(LANG, { maximumFractionDigits: 2 });
-	// 10000 -> 10K, 2500000 -> 2.5M
-	function shortNum(n) {
-		if (typeof n !== 'number' || !isFinite(n)) return t('unknown');
-		var units = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
-		for (var i = 0; i < units.length; i++) {
-			if (Math.abs(n) >= units[i][0]) {
-				var v = Math.round(n / units[i][0] * 100) / 100;
-				if (Math.abs(v) >= 1000 && i > 0) { v = Math.round(v / 1000 * 100) / 100; return nf.format(v) + units[i - 1][1]; }
-				return nf.format(v) + units[i][1];
-			}
-		}
-		return nf.format(n);
-	}
-
-	/* ---------- data ---------- */
-
-	var D = null;
-	var droidMap = {};
-	function droid(id) { return isBlank(id) ? null : (droidMap[id] || null); }
-	function droidName(id) { var d = droid(id); return d && !isBlank(d.name) ? d.name : (isBlank(id) ? t('unknown') : String(id)); }
-	function rarityName(id) { return isBlank(id) ? t('unknown') : (hasKey('term.rarity.' + id) ? t('term.rarity.' + id) : String(id)); }
-	function roleName(r) { return isBlank(r) ? t('unknown') : (hasKey('term.role.' + r) ? t('term.role.' + r) : String(r)); }
-	function tierName(id) { return isBlank(id) ? t('unknown') : (hasKey('term.variant.' + id) ? t('term.variant.' + id) : String(id)); }
-	function rows(name) { return D && Array.isArray(D[name]) ? D[name] : []; }
-
-	function tile(d, size) {
-		var name = d && !isBlank(d.name) ? String(d.name) : '?';
-		var letter = (Array.from(name.trim())[0] || '?').toUpperCase();
-		var r = d ? slug(d.rarity) : '';
-		return h('span', { class: 'tile' + (size ? ' ' + size : ''), 'aria-hidden': 'true',
-			style: '--rc:var(--r-' + (r && hasKey('term.rarity.' + r) ? r : 'unknown') + ')' }, letter);
-	}
-
-	function droidChip(id, tierId, showTier) {
-		var d = droid(id);
-		var text = h('span', { class: 'chip-text' }, droidName(id));
-		if (showTier) text.appendChild(h('span', { class: 'tier', style: '--vc:var(--v-' + slug(tierId || 'base') + ')' }, tierName(tierId)));
-		return h('span', { class: 'chip' }, tile(d, 'sm'), text);
-	}
-
-	/* ---------- routing state ---------- */
 
 	var TABS = ['collection', 'fusions', 'rebirth', 'upgrades', 'info'];
 	var SUBS = { upgrades: ['chips', 'nova'], info: ['events', 'traits'] };
-	var lastHash = '#collection';
-	var aboutPushed = false;
-	var detailPushed = false;
-	var views = {};
-	var els = {};
-
+	var SUB_SETTING = { upgrades: 'upgrades_section', info: 'info_section' };
+	var lastHash = '#collection', aboutPushed = false, detailPushed = false;
+	var views = {}, els = {}, D = null, current = '';
 	var wideMq = window.matchMedia('(min-width: 1100px)');
+	var authReady = false, emailLinkDone = false;
 
-	/* ---------- Collection ---------- */
+	/* ---------- storage (localStorage may be blocked: then the page works in memory only) ---------- */
 
-	var col = { q: '', rarity: '', selected: null };
-
-	function buildCollection() {
-		var root = h('section', { class: 'view view-collection', id: 'view-collection', 'aria-labelledby': 'h-collection' });
-		var search = h('input', { class: 'field', type: 'search', 'aria-label': t('Search by name'), placeholder: t('Search by name'),
-			autocomplete: 'off', enterkeyhint: 'search', oninput: function () { col.q = this.value; renderGrid(); } });
-		var sel = h('select', { class: 'field', 'aria-label': t('Rarity'),
-			onchange: function () { col.rarity = this.value; renderGrid(); } },
-			h('option', { value: '' }, t('All rarities')));
-		rows('rarities').slice().sort(function (a, b) { return (a.order || 0) - (b.order || 0); }).forEach(function (r) {
-			sel.appendChild(h('option', { value: r.id }, rarityName(r.id)));
-		});
-		var count = h('span', { class: 'count', 'aria-live': 'polite' });
-		var toolbar = h('div', { class: 'toolbar' }, search, sel, count);
-		var grid = h('ul', { class: 'grid', id: 'droid-grid' });
-		var empty = h('div', { class: 'empty', hidden: true }, h('h3', null, t('No droids match your search.')));
-		var listPane = h('div', { class: 'list-pane' },
-			h('h2', { id: 'h-collection', class: 'sr-only' }, t('Collection')),
-			toolbar, grid, empty);
-
-		var detail = h('aside', { class: 'detail', id: 'detail', 'aria-label': t('Droid details') });
-		var scrim = h('button', { class: 'scrim', type: 'button', 'aria-label': t('Close'), tabindex: '-1', hidden: true, onclick: function () { closeDetail(); } });
-		root.appendChild(h('div', { class: 'split' }, listPane, detail));
-		root.appendChild(scrim);
-		els.grid = grid; els.count = count; els.empty = empty; els.detail = detail; els.scrim = scrim;
-		renderGrid();
-		renderDetail();
-		return root;
-	}
-
-	function renderGrid() {
-		var q = norm(col.q.trim());
-		var list = rows('droids').filter(function (d) {
-			if (col.rarity && d.rarity !== col.rarity) return false;
-			return !q || norm(d.name).indexOf(q) !== -1;
-		});
-		clear(els.grid);
-		list.forEach(function (d) {
-			var r = slug(d.rarity);
-			var btn = h('button', { class: 'card', type: 'button', 'data-id': d.id, 'aria-pressed': String(col.selected === d.id),
-				onclick: function () { selectDroid(d.id); } },
-				tile(d),
-				h('span', { class: 'card-text' },
-					h('span', { class: 'card-name' }, isBlank(d.name) ? t('unknown') : d.name),
-					h('span', { class: 'card-meta' },
-						h('span', { class: 'rar', style: '--rc:var(--r-' + (hasKey('term.rarity.' + r) ? r : 'unknown') + ')' }, rarityName(d.rarity)),
-						' · ' + roleName(d.role))));
-			els.grid.appendChild(h('li', null, btn));
-		});
-		els.count.textContent = t('%d droids', list.length);
-		els.empty.hidden = list.length > 0;
-		els.grid.hidden = list.length === 0;
-	}
-
-	function selectDroid(id) {
-		var target = '#collection/' + encodeURIComponent(id);
-		if (wideMq.matches) { history.replaceState(null, '', target); route(); }
-		else { detailPushed = true; location.hash = target; }
-	}
-	function closeDetail() {
-		if (detailPushed) { detailPushed = false; history.back(); }
-		else { history.replaceState(null, '', '#collection'); route(); }
-	}
-
-	function detailRow(dl, label, value, fmt) {
-		var unk = isBlank(value);
-		dl.appendChild(h('dt', null, label));
-		dl.appendChild(h('dd', { class: unk ? 'unk' : '' }, unk ? t('unknown') : (fmt ? fmt(value) : String(value))));
-	}
-
-	function renderDetail() {
-		var box = clear(els.detail);
-		var d = col.selected ? droid(col.selected) : null;
-		var open = !!col.selected;
-		els.detail.classList.toggle('open', open);
-		els.scrim.hidden = !open;
-		var emptyMsg = h('div', { class: 'empty detail-empty' }, h('h3', null, t('Droid details')), h('p', null, t('Choose a droid to see its details.')));
-		if (!open) { box.appendChild(emptyMsg); return; }
-		if (!d) {
-			box.appendChild(h('div', { class: 'detail-top' }, h('h2', null, t('This droid is not in the data.')),
-				h('button', { class: 'btn close', type: 'button', onclick: closeDetail }, t('Close'))));
-			return;
+	function makeStorage() {
+		try { var x = window.localStorage; x.setItem('shophand.t', '1'); x.removeItem('shophand.t'); return x; }
+		catch (e) {
+			var m = {};
+			return { getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; }, setItem: function () { throw new Error('storage blocked'); }, removeItem: function (k) { delete m[k]; } };
 		}
-		box.appendChild(h('div', { class: 'detail-top' },
-			tile(d, 'lg'),
-			h('div', { style: 'min-width:0' },
-				h('h2', { id: 'detail-title', tabindex: '-1' }, isBlank(d.name) ? t('unknown') : d.name),
-				h('p', { class: 'meta' }, h('span', { class: 'rar', style: '--rc:var(--r-' + (hasKey('term.rarity.' + slug(d.rarity)) ? slug(d.rarity) : 'unknown') + ')' }, rarityName(d.rarity)),
-					' · ' + roleName(d.role))),
-			h('button', { class: 'btn close', type: 'button', 'aria-label': t('Close'), onclick: closeDetail }, t('Close'))));
-
-		var dl = h('dl', { class: 'dl' });
-		detailRow(dl, t('Rarity'), d.rarity, rarityName);
-		detailRow(dl, t('Role'), d.role, roleName);
-		detailRow(dl, t('Obtain method'), d.obtain_method);
-		detailRow(dl, t('Buy'), d.buy_cost, shortNum);
-		detailRow(dl, t('Per sec'), d.base_income_per_sec, shortNum);
-		detailRow(dl, t('Per min'), d.income_per_min, shortNum);
-		detailRow(dl, t('Companion trait'), d.companion_trait);
-		detailRow(dl, t('Craft time'), d.craft_time);
-		detailRow(dl, t('Sell value'), d.sell_value, shortNum);
-		box.appendChild(dl);
-
-		var recipes = rows('fusion_recipes').filter(function (r) { return r.output_droid_id === d.id; });
-		recipes.forEach(function (r) {
-			box.appendChild(h('h3', null, t('Fusion recipe')));
-			box.appendChild(h('div', { class: 'chips' }, droidChip(r.input1_id), droidChip(r.input2_id), droidChip(r.input3_id)));
-			if (!isBlank(r.unlock_rebirth)) box.appendChild(h('p', { class: 'dim small', style: 'margin-top:0.5rem' }, t('Unlocks at rebirth %s', r.unlock_rebirth)));
-		});
-
-		/* W4: the owned state (mark as owned, variants) goes here. */
-		box.appendChild(h('div', { class: 'owned-slot', 'data-slot': 'owned' }, t('Owned state comes in a later version.')));
 	}
 
-	/* ---------- Fusions ---------- */
+	/* ---------- cloud adapter for sync.js ---------- */
 
-	function buildFusions() {
-		var root = h('section', { class: 'view', id: 'view-fusions', 'aria-labelledby': 'h-fusions' },
-			h('div', { class: 'view-head' }, h('h2', { id: 'h-fusions' }, t('Fusions'))));
-		var list = rows('fusion_recipes');
-		if (!list.length) { root.appendChild(emptyState()); return root; }
-		var wrap = h('ul', { class: 'rows' });
-		list.forEach(function (r) {
-			var out = droid(r.output_droid_id);
-			var head = h('div', { class: 'row-head' }, tile(out),
-				h('div', { class: 'grow' }, h('div', { class: 'row-title' }, droidName(r.output_droid_id)), h('div', { class: 'row-sub' }, t('Output'))));
-			var card = h('div', { class: 'row-card' }, head,
-				h('div', { class: 'row-sub', style: 'margin-bottom:0.375rem' }, t('Inputs')),
-				h('div', { class: 'chips' }, droidChip(r.input1_id), droidChip(r.input2_id), droidChip(r.input3_id)));
-			var foot = [];
-			if (!isBlank(r.unlock_rebirth)) foot.push(t('Unlocks at rebirth %s', r.unlock_rebirth));
-			if (!isBlank(r.credit_cost)) foot.push(t('Fusion cost') + ': ' + shortNum(r.credit_cost));
-			if (foot.length) card.appendChild(h('p', { class: 'row-foot' }, foot.join(' · ')));
-			wrap.appendChild(h('li', null, card));
-		});
-		root.appendChild(wrap);
-		return root;
+	function offlineErr() { var e = new Error('offline'); e.code = 'offline'; return e; }
+	var cloudAdapter = {
+		getSave: function (uid) { return SH.cloud && SH.cloud.available ? SH.cloud.getSave(uid) : Promise.reject(offlineErr()); },
+		setSave: function (uid, p) { return SH.cloud && SH.cloud.available ? SH.cloud.setSave(uid, p) : Promise.reject(offlineErr()); }
+	};
+
+	/* ---------- conflict question ---------- */
+
+	function askConflict(info) {
+		var lines = [];
+		lines.push(info.sameAccount ? t('This device and your account both changed. Choose which data to keep.') : t('You signed in to an account that already has data. Choose which data to keep.'));
+		lines.push(t('This device: %d droids owned, rebirth %d.', info.local.droids, info.local.rebirth));
+		lines.push(t('Your account: %d droids owned, rebirth %d.', info.cloud.droids, info.cloud.rebirth) + (info.cloud.updated ? ' ' + t('Saved %s.', new Date(info.cloud.updated).toLocaleString(LANG)) : ''));
+		lines.push(t('The data you do not keep is saved as a backup on this device. You can restore it in About.'));
+		return ui.choose(t('Which data do you want to keep?'), lines, [
+			{ value: 'cloud', label: t('Keep the data of my account'), cls: 'primary' },
+			{ value: 'local', label: t('Keep the data on this device') },
+			{ value: null, label: t('Decide later') }]);
 	}
 
-	/* ---------- Rebirth ---------- */
+	/* ---------- helpers ---------- */
 
-	var rb = { path: '' };
-	function buildRebirth() {
-		var root = h('section', { class: 'view', id: 'view-rebirth', 'aria-labelledby': 'h-rebirth' },
-			h('div', { class: 'view-head' }, h('h2', { id: 'h-rebirth' }, t('Rebirth')),
-				h('span', { class: 'dim small' }, t('Rebirth rows: %d', rows('rebirths').length))));
-		var list = rows('rebirths');
-		if (!list.length) { root.appendChild(emptyState()); return root; }
-		var paths = [];
-		list.forEach(function (r) { if (!isBlank(r.path) && paths.indexOf(String(r.path)) === -1) paths.push(String(r.path)); });
-		paths.sort(function (a, b) { return (parseFloat(a) || 0) - (parseFloat(b) || 0) || a.localeCompare(b); });
-		var pills = h('div', { class: 'pills', role: 'group', 'aria-label': t('Path %s', '') });
-		var out = h('ul', { class: 'rows' });
-		function draw() {
-			Array.prototype.forEach.call(pills.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-path') === rb.path)); });
-			clear(out);
-			list.filter(function (r) { return !rb.path || String(r.path) === rb.path; })
-				.sort(function (a, b) { return (a.rebirth_number || 0) - (b.rebirth_number || 0) || String(a.path).localeCompare(String(b.path)); })
-				.forEach(function (r) {
-					var chips = h('div', { class: 'chips' });
-					[1, 2, 3].forEach(function (n) {
-						var id = r['droid' + n + '_id'];
-						if (isBlank(id)) chips.appendChild(h('span', { class: 'chip dim' }, h('span', { class: 'chip-text' }, t('unknown'))));
-						else chips.appendChild(droidChip(id, r['droid' + n + '_tier'], true));
-					});
-					var card = h('div', { class: 'row-card' },
-						h('div', { class: 'row-head' },
-							h('div', { class: 'grow' }, h('div', { class: 'row-title' }, isBlank(r.rebirth_number) ? t('unknown') : t('Rebirth %d', r.rebirth_number)),
-								h('div', { class: 'row-sub' }, t('Path %s', isBlank(r.path) ? t('unknown') : r.path))),
-							h('div', { class: 'row-big', title: t('Credits') }, shortNum(r.credits_required))),
-						chips);
-					if (!isBlank(r.reward)) card.appendChild(h('p', { class: 'row-foot' }, t('Reward: %s', r.reward)));
-					out.appendChild(h('li', null, card));
-				});
+	function errText(e) {
+		var code = e && e.code ? String(e.code) : '';
+		if (code === 'offline' || code === 'auth/network-request-failed') return t('No connection. Try again when you are online.');
+		if (code === 'auth/popup-blocked') return t('The sign-in window was blocked. Allow pop-ups for this page and try again.');
+		if (code === 'auth/invalid-email') return t('This email is not valid.');
+		if (code === 'auth/invalid-action-code' || code === 'auth/expired-action-code') return t('This link is not valid any more. Ask for a new link.');
+		if (code === 'auth/too-many-requests') return t('Too many tries. Wait a moment and try again.');
+		return t('Something went wrong (%s).', code || 'error');
+	}
+	function syncText(s) {
+		switch (s) {
+			case 'syncing': return t('Saving to your account…');
+			case 'synced': return t('Saved on this device and in your account.');
+			case 'offline': return t('Offline. Your changes are saved on this device. They go to your account when the connection is back.');
+			case 'error': return t('The save to your account failed. The page will try again.');
+			case 'conflict': return t('Two different saves were found. Choose which one to keep.');
+			case 'too_big': return t('Your save is too big for the account. Save a backup file.');
 		}
-		pills.appendChild(h('button', { class: 'pill', type: 'button', 'data-path': '', onclick: function () { rb.path = ''; draw(); } }, t('All paths')));
-		paths.forEach(function (p) {
-			pills.appendChild(h('button', { class: 'pill', type: 'button', 'data-path': p, onclick: function () { rb.path = p; draw(); } }, t('Path %s', p)));
+		return t('Saved on this device only.');
+	}
+	function toastUndo(info) {
+		var text;
+		if (info.kind === 'rebirth') {
+			var sup = info.what === 'super';
+			text = t(sup ? 'Super rebirth count set to %d' : 'Rebirth set to %d', sup ? (info.cycle || 1) - 1 : (info.number || 0));
+		} else {
+			var d = C.gd.droidsById[info.droid_id], nm = d && !ui.isBlank(d.name) ? d.name : String(info.droid_id);
+			var vn = info.tier_id ? ui.tierName(info.tier_id) : t('all variants');
+			text = t('Marked %s (%s) as %s', nm, vn, info.value ? t('owned') : t('not owned'));
+		}
+		ui.toast(text, function () { C.ps.restoreSnapshot(info.snapshot); });
+	}
+
+	/* ---------- views: refresh when the data changes ---------- */
+
+	function isVisible(name) { return current === name; }
+	function refreshView(name) {
+		var v = views[name]; if (!v) return;
+		if (name === 'collection') { v.refreshAll(); return; }
+		if (v.refresh) { v.dirty = false; v.refresh(); }
+	}
+	function onStateChange(kind, id) {
+		TABS.forEach(function (name) {
+			var v = views[name]; if (!v) return;
+			if (name === 'collection') {
+				if (isVisible(name) || (kind === 'owned' && col().getSelected())) v.onChange(kind, id); else v.dirty = true;
+				return;
+			}
+			v.dirty = true;
+			if (isVisible(name)) requestAnimationFrame(function () { if (v.dirty && isVisible(name)) refreshView(name); });
 		});
-		root.appendChild(pills);
-		root.appendChild(out);
-		draw();
-		return root;
 	}
-
-	/* ---------- Upgrades and Info (sections, no data yet) ---------- */
-
-	function emptyState(sub) {
-		return h('div', { class: 'empty' }, h('h3', null, t('No data yet')), sub ? h('p', null, sub) : null);
-	}
-
-	function buildSectioned(tab, titleKey, defs) {
-		var root = h('section', { class: 'view', id: 'view-' + tab, 'aria-labelledby': 'h-' + tab },
-			h('div', { class: 'view-head' }, h('h2', { id: 'h-' + tab }, t(titleKey))));
-		var seg = h('nav', { class: 'seg', 'aria-label': t('Sections') });
-		var panels = {};
-		defs.forEach(function (def) {
-			seg.appendChild(h('a', { href: '#' + tab + '/' + def.id, 'data-sub': def.id }, t(def.label)));
-			var n = def.count();
-			panels[def.id] = h('div', { class: 'panel', hidden: true },
-				n > 0 ? h('div', { class: 'empty' }, h('p', null, t('%d rows are ready. The list comes in a later version.', n))) : emptyState(def.empty ? t(def.empty) : null));
-			root.appendChild(panels[def.id]);
-		});
-		root.insertBefore(seg, root.children[1]);
-		root._seg = seg; root._panels = panels;
-		return root;
-	}
+	function col() { return views.collection; }
+	function refreshAllViews() { TABS.forEach(function (n) { if (views[n]) { if (isVisible(n) || n === 'collection') refreshView(n); else views[n].dirty = true; } }); }
 
 	/* ---------- About ---------- */
 
+	function section(title) { var box = h('section', { class: 'about-sec' }, h('h3', null, title)); return box; }
 	function buildAbout() {
 		var dlg = els.about;
+		var top = dlg.querySelector('.about-in'), keep = top ? top.scrollTop : 0;
 		var close = h('button', { class: 'btn', type: 'button', onclick: closeAbout, 'aria-label': t('Close') }, t('Close'));
 		var meta = [];
 		if (D && D.data_version) meta.push(t('Data version: %s (%s)', D.data_version, D.updated || t('unknown')));
-		clear(dlg).appendChild(h('div', { class: 'about-in' },
-			h('header', null, h('h2', { id: 'about-title' }, t('About')), close),
-			h('h3', null, t('Disclaimer')),
-			h('p', { class: 'disclaimer' }, t(DISCLAIMER)),
-			h('p', { class: 'dim' }, t(NO_LOGOS)),
-			h('h3', null, t('Free and unofficial')),
-			h('p', null, 'Shop Hand · ' + t('Four Corners Games')),
-			h('p', { class: 'dim' }, t('A two-person indie studio from Quebec.')),
-			h('p', null, t('Contact: %s', ''), h('a', { href: 'mailto:support@fourcornersgames.ca' }, 'support@fourcornersgames.ca')),
-			h('h3', null, t('Data sources')),
-			h('ul', null,
-				h('li', null, t('Fortnite Wiki on Fandom, CC BY-SA licence.')),
-				h('li', null, t('Community data by Nackz, MIT licence.')),
-				h('li', null, t('The island is made by FOAD. Thank you to the FOAD team for the game.'))),
-			meta.length ? h('p', { class: 'dim small', style: 'margin-top:0.75rem' }, meta.join(' ')) : null,
-			h('div', { class: 'about-links' },
-				h('a', { class: 'btn', href: LEGAL.privacy }, t('Privacy Policy')),
-				h('a', { class: 'btn', href: LEGAL.terms }, t('Terms of Use')))));
+		var inner = h('div', { class: 'about-in' }, h('header', null, h('h2', { id: 'about-title' }, t('About')), close));
+
+		var s1 = section(t('Free and unofficial'));
+		s1.appendChild(h('p', null, 'Shop Hand · ' + t('Four Corners Games')));
+		s1.appendChild(h('p', { class: 'test-line' }, t('Test version')));
+		s1.appendChild(h('p', { class: 'dim' }, t('A two-person indie studio from Quebec.')));
+		s1.appendChild(h('p', null, t('Contact: %s', ''), h('a', { href: 'mailto:support@fourcornersgames.ca' }, 'support@fourcornersgames.ca')));
+		inner.appendChild(s1);
+
+		var s2 = section(t('Disclaimer'));
+		s2.appendChild(h('p', { class: 'disclaimer' }, t(DISCLAIMER)));
+		s2.appendChild(h('p', { class: 'dim' }, t(NO_LOGOS)));
+		s2.appendChild(h('p', { class: 'dim' }, t('This app is free. It has no ads and no purchases. The studio earns no money from it.')));
+		inner.appendChild(s2);
+
+		if (C.ps) {
+			inner.appendChild(accountSection());
+			var s3 = section(t('Settings'));
+			var hn = h('input', { type: 'checkbox', id: 'hide-names', onchange: function () { C.ps.setSetting('hide_unowned_names', this.checked); } });
+			hn.checked = !!C.ps.getSetting('hide_unowned_names');
+			s3.appendChild(h('label', { class: 'check-row', for: 'hide-names' }, hn, t('Hide names of droids I do not own')));
+			inner.appendChild(s3);
+			inner.appendChild(backupSection());
+		}
+
+		var s5 = section(t('Privacy'));
+		s5.appendChild(h('p', null, t('Your data stays on this device. When you use the page, it is also saved in your account on a Google Firebase server. The studio does not see your email address.')));
+		inner.appendChild(s5);
+
+		if (meta.length) inner.appendChild(h('p', { class: 'dim small', style: 'margin-top:0.75rem' }, meta.join(' ')));
+		inner.appendChild(h('div', { class: 'about-links' },
+			h('a', { class: 'btn', href: LEGAL.privacy }, t('Privacy Policy')), h('a', { class: 'btn', href: LEGAL.terms }, t('Terms of Use')),
+			h('a', { class: 'btn', href: LEGAL.home }, t('Four Corners Games'))));
+		clear(dlg).appendChild(inner);
+		inner.scrollTop = keep;
+	}
+
+	function accountSection() {
+		var cloud = SH.cloud, sync = C.sync;
+		var box = section(t('Account and saving'));
+		var status = sync.getStatus();
+		box.appendChild(h('p', { class: 'sync-line', 'data-sync': status }, syncText(status)));
+		if (!sync.storageOk()) box.appendChild(h('p', { class: 'warn' }, t('This browser does not let the page save on this device. Save a backup file to keep your data.')));
+		if (status === 'conflict') box.appendChild(h('button', { class: 'btn primary', type: 'button', onclick: function () { sync.retryNow(true); } }, t('Choose which data to keep')));
+		if (!cloud || !cloud.available) { box.appendChild(h('p', { class: 'dim' }, t('Sign-in is not available now. Your data is saved on this device.'))); return box; }
+		var user = cloud.user();
+		if (!user) { box.appendChild(h('p', { class: 'dim' }, authReady ? t('Starting a guest account…') : t('Starting a guest account…'))); return box; }
+
+		var name = sync.name();
+		box.appendChild(h('div', { class: 'acct-row' }, h('span', { class: 'dim' }, t('Your name') + ': '), h('strong', null, name || '…'),
+			h('button', { class: 'btn', type: 'button', onclick: changeName }, t('Change name'))));
+		box.appendChild(h('p', { class: 'dim small' }, t('This name is not your real name. The studio never stores your email address or your Google name.')));
+
+		var provs = cloud.providers();
+		if (user.isAnonymous) {
+			box.appendChild(h('p', null, t('You are using a guest account. Link a sign-in to keep your data if you clear this browser or change device.')));
+		} else {
+			box.appendChild(h('p', null, provs.length ? t('Signed in with: %s', provs.map(function (p) { return p === 'google' ? 'Google' : t('email link'); }).join(', ')) : t('Signed in.')));
+		}
+		var acts = h('div', { class: 'acct-actions' });
+		if (provs.indexOf('google') === -1) acts.appendChild(h('button', { class: 'btn', type: 'button', onclick: linkGoogle }, t('Link Google')));
+		if (provs.indexOf('email') === -1) acts.appendChild(h('button', { class: 'btn', type: 'button', onclick: linkEmail }, t('Link email (link sent by email)')));
+		if (!user.isAnonymous) acts.appendChild(h('button', { class: 'btn', type: 'button', onclick: signOut }, t('Sign out')));
+		box.appendChild(acts);
+		if (user.isAnonymous) box.appendChild(h('p', { class: 'dim small' }, t('You can also sign in to an account you already have: use Link Google or Link email. You will choose which data to keep.')));
+		box.appendChild(h('div', { class: 'acct-actions' }, h('button', { class: 'btn danger', type: 'button', onclick: deleteAccount }, t('Delete my account and data'))));
+
+		var bk = sync.getBackup();
+		if (bk) {
+			box.appendChild(h('h4', null, t('Previous data on this device')));
+			box.appendChild(h('p', { class: 'dim small' }, t('A backup of data that was replaced: %d droids owned, rebirth %d, saved %s.', bk.summary.droids, bk.summary.rebirth, new Date(bk.saved).toLocaleString(LANG))));
+			box.appendChild(h('button', { class: 'btn', type: 'button', onclick: restoreBackup }, t('Restore the previous data')));
+		}
+		return box;
+	}
+
+	function changeName() {
+		ui.prompt({ title: t('Change name'), label: t('Your name'), value: C.sync.name(), maxlength: 24, hint: t('3 to 24 characters: letters, digits, space, _ and -.'),
+			validate: function (v) { return st.validName(v) ? '' : t('Use 3 to 24 characters: letters, digits, space, _ and -.'); } })
+			.then(function (v) { if (v != null && C.sync.setName(v)) { ui.toast(t('Name saved.')); buildAbout(); } });
+	}
+	function linkGoogle() {
+		SH.art.forget();
+		SH.cloud.linkGoogle().then(function (r) {
+			if (r.ok) { C.sync.claim(SH.cloud.uid()); ui.toast(t('Google is linked to your account.')); buildAbout(); }
+			else if (r.inUse) return handleInUse(r);
+		}).catch(function (e) { ui.alert(t('Sign-in'), errText(e)); });
+	}
+	function linkEmail() {
+		ui.prompt({ title: t('Link email (link sent by email)'), label: t('Your email'), type: 'email', autocomplete: 'email', ok: t('Send the link'),
+			hint: t('The studio does not keep your email. It is used only by the sign-in service to send you the link.'),
+			validate: function (v) { return /^\S+@\S+\.\S+$/.test(v.trim()) ? '' : t('This email is not valid.'); } })
+			.then(function (v) {
+				if (v == null) return;
+				return SH.cloud.sendEmailLink(v).then(function () {
+					return ui.alert(t('Check your email'), t('We sent a link. Open it on this device to finish. If you open it on another device, the page will ask for your email again.'));
+				}, function (e) { return ui.alert(t('Sign-in'), errText(e)); });
+			});
+	}
+	function handleInUse(r) {
+		return ui.choose(t('This sign-in already has an account'), [t('Switch to that account? The data on this device and the data in that account are not mixed. You choose which one to keep.')], [
+			{ value: 'switch', label: t('Switch to that account'), cls: 'primary' }, { value: null, label: t('Cancel') }]).then(function (pick) {
+			if (pick !== 'switch') return;
+			return SH.cloud.switchAccount(r).then(function () { ui.toast(t('Signed in.')); }, function (e) { return ui.alert(t('Sign-in'), errText(e)); });
+		});
+	}
+	// The page was opened from an email link.
+	function finishEmailLink() {
+		if (emailLinkDone || !SH.cloud.available || !SH.cloud.isEmailLink()) return;
+		emailLinkDone = true;
+		var href = location.href;
+		function done() { history.replaceState(null, '', location.pathname + (location.hash && location.hash !== '#about' ? location.hash : '')); }
+		var email = SH.cloud.pendingEmail();
+		var ask = email ? Promise.resolve(email) : ui.prompt({ title: t('Finish signing in'), label: t('Enter the email that got the link'), type: 'email', autocomplete: 'email', ok: t('Continue'),
+			validate: function (v) { return /^\S+@\S+\.\S+$/.test(v.trim()) ? '' : t('This email is not valid.'); } });
+		ask.then(function (em) {
+			if (em == null) { done(); return; }
+			return SH.cloud.completeEmailLink(em, href).then(function (r) {
+				done();
+				if (r.ok) { C.sync.claim(SH.cloud.uid()); ui.toast(t('Your email is linked.')); }
+				else if (r.inUse) return handleInUse(r);
+			}, function (e) { done(); return ui.alert(t('Sign-in'), errText(e)); });
+		});
+	}
+	function signOut() {
+		ui.confirm({ title: t('Sign out?'), text: t('This device will start with empty data. Your data stays in your account. Sign in again to get it back.'), ok: t('Sign out') }).then(function (yes) {
+			if (!yes) return;
+			return C.sync.flush().then(function () {
+				if (C.sync.isDirty()) return ui.confirm({ title: t('Some changes are not saved yet'), text: t('Some changes are only on this device. If you sign out now, they are lost. Save a backup file first, or cancel.'), ok: t('Sign out anyway'), danger: true });
+				return true;
+			}).then(function (go) {
+				if (!go) return;
+				return C.sync.attach('').then(function () { C.sync.resetLocal(); SH.art.clear(); return SH.cloud.signOut(); }).then(function () { refreshAllViews(); buildAbout(); ui.toast(t('Signed out.')); });
+			});
+		});
+	}
+	function deleteAccount() {
+		ui.confirm({ title: t('Delete my account and data'), text: t('This deletes your save in the cloud and your account. It also clears the data on this device. You cannot undo this. Save a backup file first if you want to keep your data.'), ok: t('Delete everything'), danger: true }).then(function (yes) {
+			if (!yes) return;
+			var uid = SH.cloud.uid(), provs = SH.cloud.providers();
+			return C.sync.attach('').then(function () { return SH.cloud.deleteAccount(); }).then(function (r) {
+				if (r.needsRecentLogin) {
+					return C.sync.attach(uid).then(function () {
+						if (provs.indexOf('google') !== -1) {
+							return ui.alert(t('Sign in again'), t('For safety, sign in again with Google. Then delete your account.')).then(function () { return SH.cloud.reauthGoogle(); }).then(function (rr) { if (rr.ok) deleteAccount(); });
+						}
+						return ui.alert(t('Sign in again'), t('For safety, sign out, sign in again with your email link, and then delete your account.'));
+					});
+				}
+				C.sync.resetLocal(); SH.art.clear(); refreshAllViews(); buildAbout(); ui.toast(t('Your account and data are deleted.'));
+			}).catch(function (e) { C.sync.attach(uid); ui.alert(t('Delete my account and data'), errText(e)); });
+		});
+	}
+	function restoreBackup() {
+		ui.confirm({ title: t('Restore the previous data'), text: t('This replaces the data on this device with the backup. The data now on this device becomes the new backup.'), ok: t('Restore') }).then(function (yes) {
+			if (yes && C.sync.restoreBackup()) { refreshAllViews(); buildAbout(); ui.toast(t('Restored.')); }
+		});
+	}
+
+	function backupSection() {
+		var s = section(t('Back up your data'));
+		var info = h('p', { class: 'dim', role: 'status' });
+		s.appendChild(h('p', { class: 'dim' }, t('Save your data as a file. The file also works in the Android app.')));
+		s.appendChild(h('div', { class: 'acct-actions' },
+			h('button', { class: 'btn', type: 'button', onclick: function () { exportFile(info); } }, t('Save backup to a file')),
+			h('button', { class: 'btn', type: 'button', onclick: function () { exportClipboard(info); } }, t('Copy my data to clipboard'))));
+		var fileIn = h('input', { type: 'file', accept: '.json,application/json', class: 'sr-only', id: 'import-file', tabindex: '-1', onchange: function () { loadFile(this, info); } });
+		s.appendChild(h('h4', null, t('Restore your data')));
+		s.appendChild(h('p', { class: 'dim' }, t('Load a backup file. This replaces the data on this device.')));
+		s.appendChild(fileIn);
+		s.appendChild(h('button', { class: 'btn', type: 'button', onclick: function () { fileIn.click(); } }, t('Load backup from a file')));
+		s.appendChild(info);
+		return s;
+	}
+	function exportFile(info) {
+		var text = C.ps.exportJson(), d = new Date();
+		var name = st.backupFileName({ year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() });
+		try {
+			var url = URL.createObjectURL(new Blob([text], { type: 'application/json' })), a = h('a', { href: url, download: name });
+			document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+			info.textContent = t('Saved %s.', name);
+		} catch (e) { info.textContent = t('Save failed: %s.', t('the file could not be written')); }
+	}
+	function exportClipboard(info) {
+		var text = C.ps.exportJson();
+		(navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
+			info.textContent = t('Copied %d characters. Keep the text in a safe place.', text.length);
+		}, function () { info.textContent = t('Save failed: %s.', t('the file could not be written')); });
+	}
+	function loadFile(input, info) {
+		var file = input.files && input.files[0]; input.value = '';
+		if (!file) { info.textContent = t('Load failed: no file was chosen.'); return; }
+		if (file.size > st.MAX_IMPORT_BYTES) { info.textContent = t('Load failed: the file is too big to be a backup (over 1 MB).'); return; }
+		if (file.size === 0) { info.textContent = t('Load failed: the file is empty.'); return; }
+		file.slice(0, st.MAX_IMPORT_BYTES + 1).text().then(function (text) {
+			var chk = st.checkImport(text);
+			if (!chk.ok) { info.textContent = t('Load failed: %s', t(chk.key)); return; }
+			return ui.confirm({ title: t('Replace your data?'), text: t('Import replaces the owned droids, base and settings on this device. Continue?') }).then(function (yes) {
+				if (!yes) { info.textContent = t('Load cancelled.'); return; }
+				var snap = C.ps.toDict();
+				var res = C.ps.importJson(text);
+				if (res.ok) { C.sync.stashBackup && C.sync.stashBackup(snap); refreshAllViews(); info.textContent = t('Loaded %s. %s', file.name, t(res.key, res.count)); }
+				else info.textContent = t('Load failed: %s', t(res.key));
+			});
+		}, function () { info.textContent = t('Load failed: %s.', t('the file could not be opened')); });
 	}
 
 	function openAbout() {
 		if (!els.about.open) {
+			buildAbout();
 			if (typeof els.about.showModal === 'function') els.about.showModal(); else els.about.setAttribute('open', '');
 		}
 	}
@@ -350,48 +340,73 @@
 		else { history.replaceState(null, '', lastHash); route(); }
 	}
 
+	/* ---------- detail (Collection) ---------- */
+
+	var api = {
+		openDetail: function (id) {
+			var target = '#collection/' + encodeURIComponent(id);
+			if (current === 'collection' && wideMq.matches) { history.replaceState(null, '', target); route(); }
+			else { detailPushed = true; location.hash = target; }
+		},
+		closeDetail: function () {
+			if (detailPushed) { detailPushed = false; history.back(); }
+			else { history.replaceState(null, '', '#collection'); route(); }
+		}
+	};
+
 	/* ---------- router ---------- */
 
 	function route() {
 		var parts = location.hash.replace(/^#\/?/, '').split('/').map(function (p) { try { return decodeURIComponent(p); } catch (e) { return p; } });
 		var name = parts[0];
-
 		if (name === 'about') { if (D) openAbout(); return; }
 		aboutPushed = false;
 		if (els.about.open) els.about.close();
-
+		if (!D) return;
 		if (TABS.indexOf(name) === -1) { name = 'collection'; parts = [name]; history.replaceState(null, '', '#collection'); }
-		lastHash = '#' + parts.map(encodeURIComponent).join('/');
-		var prev = document.body.getAttribute('data-tab');
+		var prev = current;
+		current = name;
 		document.body.setAttribute('data-tab', name);
+		TABS.forEach(function (tab) { if (views[tab]) views[tab].el.hidden = tab !== name; });
+		Array.prototype.forEach.call(els.tabs.querySelectorAll('.tab'), function (a) { if (a.getAttribute('data-tab') === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
 
-		TABS.forEach(function (tab) { if (views[tab]) views[tab].hidden = tab !== name; });
-		Array.prototype.forEach.call(els.tabs.querySelectorAll('.tab'), function (a) {
-			if (a.getAttribute('data-tab') === name) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
-		});
-		if (prev !== name) els.content.scrollTop = 0;
-
-		if (name === 'collection' && views.collection) {
-			var id = parts[1] || null;
-			if (id !== col.selected) {
-				col.selected = id;
-				renderDetail();
-				Array.prototype.forEach.call(els.grid.querySelectorAll('.card'), function (c) { c.setAttribute('aria-pressed', String(c.getAttribute('data-id') === id)); });
-				if (id && !wideMq.matches) {
-					var tt = document.getElementById('detail-title'); if (tt) tt.focus({ preventScroll: true });
-				}
-			}
-			if (!id) detailPushed = false;
+		if (prev !== name) {
+			if (prev && views[prev] && views[prev].onHide) views[prev].onHide();
+			els.content.scrollTop = 0;
 		}
-		if (SUBS[name] && views[name]) {
-			var sub = SUBS[name].indexOf(parts[1]) !== -1 ? parts[1] : SUBS[name][0];
-			var v = views[name];
-			Object.keys(v._panels).forEach(function (k) { v._panels[k].hidden = k !== sub; });
-			Array.prototype.forEach.call(v._seg.children, function (a) {
-				if (a.getAttribute('data-sub') === sub) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
-			});
+		var sub = null;
+		if (SUBS[name]) {
+			sub = SUBS[name].indexOf(parts[1]) !== -1 ? parts[1] : String(C.ps.getSetting(SUB_SETTING[name]));
+			if (SUBS[name].indexOf(sub) === -1) sub = SUBS[name][0];
+			views[name].setSub(sub);
+			if (C.ps.getSetting(SUB_SETTING[name]) !== sub) { C.ps.setSetting(SUB_SETTING[name], sub); }
+			lastHash = '#' + name + '/' + sub;
+		} else lastHash = '#' + parts.map(encodeURIComponent).join('/');
+
+		if (name === 'collection') {
+			var id = parts[1] || null;
+			views.collection.setSelected(id);
+			if (!id) detailPushed = false;
+			else if (!wideMq.matches) { var tt = document.getElementById('detail-title'); if (tt) tt.focus({ preventScroll: true }); }
+			if (prev !== name) views.collection.refreshAll();
+		} else if (prev !== name || views[name].dirty) {
+			if (views[name].onShow && prev !== name) views[name].onShow();
+			refreshView(name);
 		}
 	}
+
+	/* ---------- sign-in events ---------- */
+
+	function onUser(user) {
+		authReady = true;
+		var cloud = SH.cloud;
+		if (user) {
+			C.sync.attach(user.uid).then(function () { SH.art.check(user.uid, cloud); finishEmailLink(); });
+			finishEmailLink();
+		} else C.sync.attach('');
+		if (els.about.open) buildAbout();
+	}
+	function setSyncDot(status) { els.aboutBtn.setAttribute('data-sync', status); }
 
 	/* ---------- start ---------- */
 
@@ -400,51 +415,63 @@
 		Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-label]'), function (e) { e.setAttribute('aria-label', t(e.getAttribute('data-i18n-label'))); });
 	}
 
+	function start() {
+		C.gd = dom.buildIndexes(D);
+		C.ps = st.createPlayerState(C.gd);
+		C.art = SH.art;
+		C.sync = SH.sync.createSync({ ps: C.ps, storage: makeStorage(), cloud: cloudAdapter, askConflict: askConflict });
+		C.sync.loadLocal();
+		C.sync.start();
+		C.ps.onUndo(toastUndo);
+		C.ps.onChange(onStateChange);
+		C.sync.onData(function () { refreshAllViews(); if (els.about.open) buildAbout(); if (views.collection) views.collection.onData(); });
+		C.sync.onStatus(function (s) { setSyncDot(s); if (els.about.open) buildAbout(); });
+		SH.art.onChange(function () { refreshAllViews(); });
+
+		views.collection = SH.screens.collection(api);
+		views.fusions = SH.screens.fusions();
+		views.rebirth = SH.screens.rebirth();
+		views.upgrades = SH.screens.upgrades();
+		views.info = SH.screens.info();
+		TABS.forEach(function (tab) { views[tab].el.hidden = true; els.view.appendChild(views[tab].el); });
+		window.addEventListener('online', function () { C.sync.retryNow(); });
+		document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') C.sync.flush(); else C.sync.retryNow(); });
+		window.addEventListener('pagehide', function () { C.sync.flush(); });
+		route();
+		if (location.hash === '#about') openAbout();
+
+		SH.cloud.init(LANG);
+		SH.cloud.onUser(onUser);
+	}
+
 	function init() {
 		els.content = document.getElementById('main');
 		els.view = document.getElementById('view');
 		els.tabs = document.getElementById('tabs');
 		els.about = document.getElementById('about');
+		els.aboutBtn = document.getElementById('about-btn');
 		applyStatic();
 
-		document.getElementById('about-btn').addEventListener('click', function (e) {
-			e.preventDefault(); aboutPushed = true; location.hash = '#about';
-		});
+		els.aboutBtn.addEventListener('click', function (e) { e.preventDefault(); aboutPushed = true; location.hash = '#about'; });
 		els.about.addEventListener('close', function () { if (location.hash === '#about') closeAbout(); });
 		els.about.addEventListener('click', function (e) { if (e.target === els.about) els.about.close(); });
-		document.addEventListener('keydown', function (e) {
-			if (e.key === 'Escape' && !els.about.open && col.selected && !wideMq.matches) closeDetail();
-		});
-		wideMq.addEventListener('change', function () { renderDetail(); });
+		document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !els.about.open && !document.querySelector('dialog.sheet[open]') && views.collection && views.collection.getSelected() && !wideMq.matches) api.closeDetail(); });
+		wideMq.addEventListener('change', function () { if (views.collection) views.collection.renderDetail(); });
 		window.addEventListener('hashchange', route);
 
 		fetch(DATA_URL, { credentials: 'same-origin' })
 			.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-			.then(function (j) { D = j; })
+			.then(function (j) { if (!dom.isUsableData(j)) throw new Error('bad data'); D = j; })
 			.catch(function (err) { console.warn('Shop Hand data not loaded:', err); D = null; })
 			.then(function () {
 				clear(els.view);
 				if (!D) {
-					els.view.appendChild(h('section', { class: 'view' }, emptyState(t('Data could not be loaded.'))));
+					els.view.appendChild(h('section', { class: 'view' }, ui.emptyState(t('No data yet'), t('Data could not be loaded.'))));
 					buildAbout();
-					window.addEventListener('hashchange', route);
 					if (location.hash === '#about') openAbout();
 					return;
 				}
-				rows('droids').forEach(function (d) { droidMap[d.id] = d; });
-				views.collection = buildCollection();
-				views.fusions = buildFusions();
-				views.rebirth = buildRebirth();
-				views.upgrades = buildSectioned('upgrades', 'Upgrades', [
-					{ id: 'chips', label: 'Chips', count: function () { return rows('upgrade_costs').length; } },
-					{ id: 'nova', label: 'Nova Shop', count: function () { return rows('nova_shop').length + rows('nova_upgrades').length; } }]);
-				views.info = buildSectioned('info', 'Info', [
-					{ id: 'events', label: 'Events', empty: 'No event data', count: function () { return rows('events').length; } },
-					{ id: 'traits', label: 'Traits', empty: 'No trait data', count: function () { return rows('traits').length; } }]);
-				TABS.forEach(function (tab) { views[tab].hidden = true; els.view.appendChild(views[tab]); });
-				buildAbout();
-				route();
-				if (location.hash === '#about') openAbout();
+				start();
 			});
 	}
 

@@ -1323,5 +1323,353 @@ window.SH_STRINGS = {
 "Switch language": {
 "en": "Switch language",
 "fr": "Changer de langue"
+},
+"This device and your account both changed. Choose which data to keep.": {
+"en": "This device and your account both changed. Choose which data to keep.",
+"fr": "Cet appareil et votre compte ont changé tous les deux. Choisissez les données à garder."
+},
+"You signed in to an account that already has data. Choose which data to keep.": {
+"en": "You signed in to an account that already has data. Choose which data to keep.",
+"fr": "Vous êtes connecté à un compte qui a déjà des données. Choisissez les données à garder."
+},
+"This device: %d droids owned, rebirth %d.": {
+"en": "This device: %d droids owned, rebirth %d.",
+"fr": "Cet appareil : %d droïdes obtenus, renaissance %d."
+},
+"Your account: %d droids owned, rebirth %d.": {
+"en": "Your account: %d droids owned, rebirth %d.",
+"fr": "Votre compte : %d droïdes obtenus, renaissance %d."
+},
+"The data you do not keep is saved as a backup on this device. You can restore it in About.": {
+"en": "The data you do not keep is saved as a backup on this device. You can restore it in About.",
+"fr": "Les données que vous ne gardez pas sont conservées en copie de secours sur cet appareil. Vous pouvez les restaurer dans À propos."
+},
+"Which data do you want to keep?": {
+"en": "Which data do you want to keep?",
+"fr": "Quelles données voulez-vous garder ?"
+},
+"Keep the data of my account": {
+"en": "Keep the data of my account",
+"fr": "Garder les données de mon compte"
+},
+"Keep the data on this device": {
+"en": "Keep the data on this device",
+"fr": "Garder les données de cet appareil"
+},
+"Decide later": {
+"en": "Decide later",
+"fr": "Décider plus tard"
+},
+"No connection. Try again when you are online.": {
+"en": "No connection. Try again when you are online.",
+"fr": "Pas de connexion. Réessayez quand vous serez en ligne."
+},
+"The sign-in window was blocked. Allow pop-ups for this page and try again.": {
+"en": "The sign-in window was blocked. Allow pop-ups for this page and try again.",
+"fr": "La fenêtre de connexion a été bloquée. Autorisez les fenêtres contextuelles pour cette page et réessayez."
+},
+"This email is not valid.": {
+"en": "This email is not valid.",
+"fr": "Ce courriel n’est pas valide."
+},
+"This link is not valid any more. Ask for a new link.": {
+"en": "This link is not valid any more. Ask for a new link.",
+"fr": "Ce lien n’est plus valide. Demandez un nouveau lien."
+},
+"Too many tries. Wait a moment and try again.": {
+"en": "Too many tries. Wait a moment and try again.",
+"fr": "Trop d’essais. Attendez un moment et réessayez."
+},
+"Something went wrong (%s).": {
+"en": "Something went wrong (%s).",
+"fr": "Une erreur est survenue (%s)."
+},
+"Saving to your account…": {
+"en": "Saving to your account…",
+"fr": "Enregistrement dans votre compte…"
+},
+"Saved on this device and in your account.": {
+"en": "Saved on this device and in your account.",
+"fr": "Enregistré sur cet appareil et dans votre compte."
+},
+"Offline. Your changes are saved on this device. They go to your account when the connection is back.": {
+"en": "Offline. Your changes are saved on this device. They go to your account when the connection is back.",
+"fr": "Hors ligne. Vos changements sont enregistrés sur cet appareil. Ils iront dans votre compte au retour de la connexion."
+},
+"The save to your account failed. The page will try again.": {
+"en": "The save to your account failed. The page will try again.",
+"fr": "L’enregistrement dans votre compte a échoué. La page va réessayer."
+},
+"Two different saves were found. Choose which one to keep.": {
+"en": "Two different saves were found. Choose which one to keep.",
+"fr": "Deux sauvegardes différentes ont été trouvées. Choisissez celle à garder."
+},
+"Your save is too big for the account. Save a backup file.": {
+"en": "Your save is too big for the account. Save a backup file.",
+"fr": "Votre sauvegarde est trop grosse pour le compte. Enregistrez un fichier de sauvegarde."
+},
+"Saved on this device only.": {
+"en": "Saved on this device only.",
+"fr": "Enregistré sur cet appareil seulement."
+},
+"Test version": {
+"en": "Test version",
+"fr": "Version d’essai"
+},
+"Your data stays on this device. When you use the page, it is also saved in your account on a Google Firebase server. The studio does not see your email address.": {
+"en": "Your data stays on this device. When you use the page, it is also saved in your account on a Google Firebase server. The studio does not see your email address.",
+"fr": "Vos données restent sur cet appareil. Quand vous utilisez la page, elles sont aussi enregistrées dans votre compte sur un serveur Firebase de Google. Le studio ne voit pas votre adresse courriel."
+},
+"Account and saving": {
+"en": "Account and saving",
+"fr": "Compte et enregistrement"
+},
+"This browser does not let the page save on this device. Save a backup file to keep your data.": {
+"en": "This browser does not let the page save on this device. Save a backup file to keep your data.",
+"fr": "Ce navigateur ne permet pas à la page d’enregistrer sur cet appareil. Enregistrez un fichier de sauvegarde pour garder vos données."
+},
+"Choose which data to keep": {
+"en": "Choose which data to keep",
+"fr": "Choisir les données à garder"
+},
+"Sign-in is not available now. Your data is saved on this device.": {
+"en": "Sign-in is not available now. Your data is saved on this device.",
+"fr": "La connexion n’est pas disponible pour le moment. Vos données sont enregistrées sur cet appareil."
+},
+"Starting a guest account…": {
+"en": "Starting a guest account…",
+"fr": "Démarrage d’un compte invité…"
+},
+"Your name": {
+"en": "Your name",
+"fr": "Votre nom"
+},
+"Change name": {
+"en": "Change name",
+"fr": "Changer le nom"
+},
+"This name is not your real name. The studio never stores your email address or your Google name.": {
+"en": "This name is not your real name. The studio never stores your email address or your Google name.",
+"fr": "Ce nom n’est pas votre vrai nom. Le studio ne garde jamais votre adresse courriel ni votre nom Google."
+},
+"You are using a guest account. Link a sign-in to keep your data if you clear this browser or change device.": {
+"en": "You are using a guest account. Link a sign-in to keep your data if you clear this browser or change device.",
+"fr": "Vous utilisez un compte invité. Liez une connexion pour garder vos données si vous videz ce navigateur ou changez d’appareil."
+},
+"Signed in with: %s": {
+"en": "Signed in with: %s",
+"fr": "Connecté avec : %s"
+},
+"email link": {
+"en": "email link",
+"fr": "lien par courriel"
+},
+"Signed in.": {
+"en": "Signed in.",
+"fr": "Connecté."
+},
+"Link Google": {
+"en": "Link Google",
+"fr": "Lier Google"
+},
+"Link email (link sent by email)": {
+"en": "Link email (link sent by email)",
+"fr": "Lier un courriel (lien envoyé par courriel)"
+},
+"Sign out": {
+"en": "Sign out",
+"fr": "Se déconnecter"
+},
+"You can also sign in to an account you already have: use Link Google or Link email. You will choose which data to keep.": {
+"en": "You can also sign in to an account you already have: use Link Google or Link email. You will choose which data to keep.",
+"fr": "Vous pouvez aussi vous connecter à un compte que vous avez déjà : utilisez Lier Google ou Lier un courriel. Vous choisirez les données à garder."
+},
+"Delete my account and data": {
+"en": "Delete my account and data",
+"fr": "Supprimer mon compte et mes données"
+},
+"Previous data on this device": {
+"en": "Previous data on this device",
+"fr": "Données précédentes sur cet appareil"
+},
+"A backup of data that was replaced: %d droids owned, rebirth %d, saved %s.": {
+"en": "A backup of data that was replaced: %d droids owned, rebirth %d, saved %s.",
+"fr": "Une copie de secours de données remplacées : %d droïdes obtenus, renaissance %d, enregistrée le %s."
+},
+"Restore the previous data": {
+"en": "Restore the previous data",
+"fr": "Restaurer les données précédentes"
+},
+"3 to 24 characters: letters, digits, space, _ and -.": {
+"en": "3 to 24 characters: letters, digits, space, _ and -.",
+"fr": "De 3 à 24 caractères : lettres, chiffres, espace, _ et -."
+},
+"Use 3 to 24 characters: letters, digits, space, _ and -.": {
+"en": "Use 3 to 24 characters: letters, digits, space, _ and -.",
+"fr": "Utilisez de 3 à 24 caractères : lettres, chiffres, espace, _ et -."
+},
+"Name saved.": {
+"en": "Name saved.",
+"fr": "Nom enregistré."
+},
+"Google is linked to your account.": {
+"en": "Google is linked to your account.",
+"fr": "Google est lié à votre compte."
+},
+"Sign-in": {
+"en": "Sign-in",
+"fr": "Connexion"
+},
+"Your email": {
+"en": "Your email",
+"fr": "Votre courriel"
+},
+"Send the link": {
+"en": "Send the link",
+"fr": "Envoyer le lien"
+},
+"The studio does not keep your email. It is used only by the sign-in service to send you the link.": {
+"en": "The studio does not keep your email. It is used only by the sign-in service to send you the link.",
+"fr": "Le studio ne garde pas votre courriel. Seul le service de connexion l’utilise, pour vous envoyer le lien."
+},
+"Check your email": {
+"en": "Check your email",
+"fr": "Vérifiez vos courriels"
+},
+"We sent a link. Open it on this device to finish. If you open it on another device, the page will ask for your email again.": {
+"en": "We sent a link. Open it on this device to finish. If you open it on another device, the page will ask for your email again.",
+"fr": "Nous avons envoyé un lien. Ouvrez-le sur cet appareil pour terminer. Si vous l’ouvrez sur un autre appareil, la page vous redemandera votre courriel."
+},
+"This sign-in already has an account": {
+"en": "This sign-in already has an account",
+"fr": "Cette connexion a déjà un compte"
+},
+"Switch to that account? The data on this device and the data in that account are not mixed. You choose which one to keep.": {
+"en": "Switch to that account? The data on this device and the data in that account are not mixed. You choose which one to keep.",
+"fr": "Passer à ce compte? Les données de cet appareil et celles du compte ne sont pas mélangées. Vous choisissez lesquelles garder."
+},
+"Switch to that account": {
+"en": "Switch to that account",
+"fr": "Passer à ce compte"
+},
+"Finish signing in": {
+"en": "Finish signing in",
+"fr": "Terminer la connexion"
+},
+"Enter the email that got the link": {
+"en": "Enter the email that got the link",
+"fr": "Entrez le courriel qui a reçu le lien"
+},
+"Continue": {
+"en": "Continue",
+"fr": "Continuer"
+},
+"Your email is linked.": {
+"en": "Your email is linked.",
+"fr": "Votre courriel est lié."
+},
+"Sign out?": {
+"en": "Sign out?",
+"fr": "Se déconnecter ?"
+},
+"This device will start with empty data. Your data stays in your account. Sign in again to get it back.": {
+"en": "This device will start with empty data. Your data stays in your account. Sign in again to get it back.",
+"fr": "Cet appareil repartira sans données. Vos données restent dans votre compte. Reconnectez-vous pour les retrouver."
+},
+"Some changes are not saved yet": {
+"en": "Some changes are not saved yet",
+"fr": "Certains changements ne sont pas encore enregistrés"
+},
+"Some changes are only on this device. If you sign out now, they are lost. Save a backup file first, or cancel.": {
+"en": "Some changes are only on this device. If you sign out now, they are lost. Save a backup file first, or cancel.",
+"fr": "Certains changements sont seulement sur cet appareil. Si vous vous déconnectez maintenant, ils seront perdus. Enregistrez d’abord un fichier de sauvegarde, ou annulez."
+},
+"Sign out anyway": {
+"en": "Sign out anyway",
+"fr": "Se déconnecter quand même"
+},
+"Signed out.": {
+"en": "Signed out.",
+"fr": "Déconnecté."
+},
+"This deletes your save in the cloud and your account. It also clears the data on this device. You cannot undo this. Save a backup file first if you want to keep your data.": {
+"en": "This deletes your save in the cloud and your account. It also clears the data on this device. You cannot undo this. Save a backup file first if you want to keep your data.",
+"fr": "Cela supprime votre sauvegarde en ligne et votre compte. Cela efface aussi les données de cet appareil. Vous ne pouvez pas l’annuler. Enregistrez d’abord un fichier de sauvegarde si vous voulez garder vos données."
+},
+"Delete everything": {
+"en": "Delete everything",
+"fr": "Tout supprimer"
+},
+"Sign in again": {
+"en": "Sign in again",
+"fr": "Se reconnecter"
+},
+"For safety, sign in again with Google. Then delete your account.": {
+"en": "For safety, sign in again with Google. Then delete your account.",
+"fr": "Par sécurité, reconnectez-vous avec Google. Supprimez ensuite votre compte."
+},
+"For safety, sign out, sign in again with your email link, and then delete your account.": {
+"en": "For safety, sign out, sign in again with your email link, and then delete your account.",
+"fr": "Par sécurité, déconnectez-vous, reconnectez-vous avec votre lien par courriel, puis supprimez votre compte."
+},
+"Your account and data are deleted.": {
+"en": "Your account and data are deleted.",
+"fr": "Votre compte et vos données sont supprimés."
+},
+"This replaces the data on this device with the backup. The data now on this device becomes the new backup.": {
+"en": "This replaces the data on this device with the backup. The data now on this device becomes the new backup.",
+"fr": "Cela remplace les données de cet appareil par la copie de secours. Les données actuelles de cet appareil deviennent la nouvelle copie de secours."
+},
+"Restore": {
+"en": "Restore",
+"fr": "Restaurer"
+},
+"Restored.": {
+"en": "Restored.",
+"fr": "Restauré."
+},
+"Save your data as a file. The file also works in the Android app.": {
+"en": "Save your data as a file. The file also works in the Android app.",
+"fr": "Enregistrez vos données dans un fichier. Le fichier fonctionne aussi dans l’application Android."
+},
+"Load a backup file. This replaces the data on this device.": {
+"en": "Load a backup file. This replaces the data on this device.",
+"fr": "Chargez un fichier de sauvegarde. Cela remplace les données de cet appareil."
+},
+"the file could not be written": {
+"en": "the file could not be written",
+"fr": "le fichier n’a pas pu être écrit"
+},
+"Less": {
+"en": "Less",
+"fr": "Moins"
+},
+"More": {
+"en": "More",
+"fr": "Plus"
+},
+"Super rebirth count set to %d": {
+"en": "Super rebirth count set to %d",
+"fr": "Nombre de super renaissances fixé à %d"
+},
+"Rebirth set to %d": {
+"en": "Rebirth set to %d",
+"fr": "Renaissance fixée à %d"
+},
+"term.obtain.buy": {
+"en": "Buy",
+"fr": "Achat"
+},
+"term.obtain.fusion": {
+"en": "Fusion",
+"fr": "Fusion"
+},
+"term.obtain.nova": {
+"en": "Nova Shop",
+"fr": "Boutique Nova"
+},
+"term.obtain.event": {
+"en": "Event",
+"fr": "Événement"
 }
 };
