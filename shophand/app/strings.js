@@ -1671,5 +1671,177 @@ window.SH_STRINGS = {
 "term.obtain.event": {
 "en": "Event",
 "fr": "Événement"
+},
+"Online saving": {
+"en": "Online saving",
+"fr": "Sauvegarde en ligne"
+},
+"On this device only": {
+"en": "On this device only",
+"fr": "Sur cet appareil seulement"
+},
+"Online saving on": {
+"en": "Online saving on",
+"fr": "Sauvegarde en ligne activée"
+},
+"Your progress stays on this device. Nothing is sent to Google or to any other server. Turn on online saving to use the same progress on other devices.": {
+"en": "Your progress stays on this device. Nothing is sent to Google or to any other server. Turn on online saving to use the same progress on other devices.",
+"fr": "Votre progression reste sur cet appareil. Rien n’est envoyé à Google ni à un autre serveur. Activez la sauvegarde en ligne pour retrouver la même progression sur d’autres appareils."
+},
+"Turn on online saving": {
+"en": "Turn on online saving",
+"fr": "Activer la sauvegarde en ligne"
+},
+"Save your progress online?": {
+"en": "Save your progress online?",
+"fr": "Sauvegarder votre progression en ligne?"
+},
+"Shop Hand works without an account. Your progress stays on this device.": {
+"en": "Shop Hand works without an account. Your progress stays on this device.",
+"fr": "Shop Hand fonctionne sans compte. Votre progression reste sur cet appareil."
+},
+"If you turn on online saving, Shop Hand creates a guest account with Google Firebase and saves your progress on Google's servers in Montreal, Canada. Google's sign-in service may handle sign-in data in the United States. This lets you use the same progress on other devices. We do not ask for your name or your email.": {
+"en": "If you turn on online saving, Shop Hand creates a guest account with Google Firebase and saves your progress on Google's servers in Montreal, Canada. Google's sign-in service may handle sign-in data in the United States. This lets you use the same progress on other devices. We do not ask for your name or your email.",
+"fr": "Si vous activez la sauvegarde en ligne, Shop Hand crée un compte invité avec Google Firebase et enregistre votre progression sur des serveurs de Google à Montréal (Canada). Le service de connexion de Google peut traiter les données de connexion aux États-Unis. Vous pouvez ainsi retrouver votre progression sur d’autres appareils. Nous ne demandons ni votre nom ni votre courriel."
+},
+"Read before you decide:": {
+"en": "Read before you decide:",
+"fr": "À lire avant de décider :"
+},
+"I am 14 or older, or a parent or guardian agrees for me.": {
+"en": "I am 14 or older, or a parent or guardian agrees for me.",
+"fr": "J’ai 14 ans ou plus, ou un parent ou un tuteur est d’accord pour moi."
+},
+"Not now": {
+"en": "Not now",
+"fr": "Pas maintenant"
+},
+"You can turn it off at any time in About. You can then also delete your online data.": {
+"en": "You can turn it off at any time in About. You can then also delete your online data.",
+"fr": "Vous pouvez la désactiver en tout temps dans À propos. Vous pourrez alors aussi supprimer vos données en ligne."
+},
+"Online saving could not start. Check your connection and try again.": {
+"en": "Online saving could not start. Check your connection and try again.",
+"fr": "La sauvegarde en ligne n’a pas pu démarrer. Vérifiez votre connexion et réessayez."
+},
+"This browser does not let the page remember your choice, so online saving cannot start.": {
+"en": "This browser does not let the page remember your choice, so online saving cannot start.",
+"fr": "Ce navigateur ne permet pas à la page de se souvenir de votre choix. La sauvegarde en ligne ne peut donc pas démarrer."
+},
+"Online saving is on.": {
+"en": "Online saving is on.",
+"fr": "La sauvegarde en ligne est activée."
+},
+"Turn off online saving": {
+"en": "Turn off online saving",
+"fr": "Désactiver la sauvegarde en ligne"
+},
+"Your progress stays on this device. Choose what happens to your online data.": {
+"en": "Your progress stays on this device. Choose what happens to your online data.",
+"fr": "Votre progression reste sur cet appareil. Choisissez ce qu’il advient de vos données en ligne."
+},
+"A guest account cannot be opened again after you turn off online saving. Its data is deleted automatically after 12 months with no save.": {
+"en": "A guest account cannot be opened again after you turn off online saving. Its data is deleted automatically after 12 months with no save.",
+"fr": "Un compte invité ne peut plus être rouvert après la désactivation de la sauvegarde en ligne. Ses données sont supprimées automatiquement après 12 mois sans sauvegarde."
+},
+"You can sign in to this account again later with the same Google account or email. Its data is deleted automatically after 24 months with no save.": {
+"en": "You can sign in to this account again later with the same Google account or email. Its data is deleted automatically after 24 months with no save.",
+"fr": "Vous pourrez vous reconnecter plus tard à ce compte avec le même compte Google ou la même adresse courriel. Ses données sont supprimées automatiquement après 24 mois sans sauvegarde."
+},
+"Turn off and delete my online data": {
+"en": "Turn off and delete my online data",
+"fr": "Désactiver et supprimer mes données en ligne"
+},
+"Turn off and keep my online data": {
+"en": "Turn off and keep my online data",
+"fr": "Désactiver et garder mes données en ligne"
+},
+"Online saving is off. Your progress stays on this device.": {
+"en": "Online saving is off. Your progress stays on this device.",
+"fr": "La sauvegarde en ligne est désactivée. Votre progression reste sur cet appareil."
+},
+"Your online data is deleted. Online saving is off. Your progress stays on this device.": {
+"en": "Your online data is deleted. Online saving is off. Your progress stays on this device.",
+"fr": "Vos données en ligne sont supprimées. La sauvegarde en ligne est désactivée. Votre progression reste sur cet appareil."
+},
+"Your user ID": {
+"en": "Your user ID",
+"fr": "Votre identifiant d’utilisateur"
+},
+"Copy": {
+"en": "Copy",
+"fr": "Copier"
+},
+"Give this ID if you write to us about your data.": {
+"en": "Give this ID if you write to us about your data.",
+"fr": "Donnez cet identifiant si vous nous écrivez au sujet de vos données."
+},
+"Copied.": {
+"en": "Copied.",
+"fr": "Copié."
+},
+"The ID could not be copied. Select it and copy it by hand.": {
+"en": "The ID could not be copied. Select it and copy it by hand.",
+"fr": "L’identifiant n’a pas pu être copié. Sélectionnez-le et copiez-le à la main."
+},
+"For safety, sign in again with a new email link. Enter your email and the page sends the link. Open it, and then delete your account.": {
+"en": "For safety, sign in again with a new email link. Enter your email and the page sends the link. Open it, and then delete your account.",
+"fr": "Pour votre sécurité, reconnectez-vous avec un nouveau lien envoyé par courriel. Entrez votre adresse et la page envoie le lien. Ouvrez-le, puis supprimez votre compte."
+},
+"Your progress stays on this device. Only if you turn on online saving, it is also saved on Google's servers (Firebase). The studio does not see your email address.": {
+"en": "Your progress stays on this device. Only if you turn on online saving, it is also saved on Google's servers (Firebase). The studio does not see your email address.",
+"fr": "Votre progression reste sur cet appareil. Seulement si vous activez la sauvegarde en ligne, elle est aussi enregistrée sur des serveurs de Google (Firebase). Le studio ne voit pas votre adresse courriel."
+},
+"Online saving has not started yet. Check your connection. The page tries again when you are online.": {
+"en": "Online saving has not started yet. Check your connection. The page tries again when you are online.",
+"fr": "La sauvegarde en ligne n’est pas encore démarrée. Vérifiez votre connexion. La page réessaie quand vous êtes en ligne."
+},
+"Delete your account": {
+"en": "Delete your account",
+"fr": "Supprimer votre compte"
+},
+"On this device": {
+"en": "On this device",
+"fr": "Sur cet appareil"
+},
+"Guest account": {
+"en": "Guest account",
+"fr": "Compte invité"
+},
+"Google account": {
+"en": "Google account",
+"fr": "Compte Google"
+},
+"Email account": {
+"en": "Email account",
+"fr": "Compte par courriel"
+},
+"Account and online saving": {
+"en": "Account and online saving",
+"fr": "Compte et sauvegarde en ligne"
+},
+"Obtained": {
+"en": "Obtained",
+"fr": "Obtenu"
+},
+"Not obtained yet": {
+"en": "Not obtained yet",
+"fr": "Pas encore obtenu"
+},
+"Tap when obtained": {
+"en": "Tap when obtained",
+"fr": "Touchez quand obtenu"
+},
+"obtained": {
+"en": "obtained",
+"fr": "obtenu"
+},
+"not obtained": {
+"en": "not obtained",
+"fr": "non obtenu"
+},
+"Marked required droid %d of rebirth %d as %s": {
+"en": "Marked required droid %d of rebirth %d as %s",
+"fr": "Droïde requis %d de la renaissance %d marqué comme %s"
 }
 };

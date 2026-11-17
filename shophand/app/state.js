@@ -31,6 +31,7 @@
 	var MAX_IMPORT_BYTES = 1048576;
 	var MAX_DEPTH = 12;
 	var MAX_REBIRTH_NUMBER = 9999;
+	var MAX_REBIRTH_CHECK_ROWS = 2000;
 	var MAX_SETTING_TEXT = 32;
 	var MAX_SLOTS = 64;
 	var MAX_NOVA_LEVEL = 999;
@@ -126,7 +127,7 @@
 	// A player state for one set of game data (gd = domain.buildIndexes(...)).
 	function createPlayerState(gd) {
 		var ps = {
-			owned: {}, rebirthNumber: 0, rebirthCycle: 1, baseLayout: {}, novaPurchases: {}, novaLevels: {}, novaInputs: {},
+			owned: {}, rebirthNumber: 0, rebirthCycle: 1, rebirthChecks: {}, baseLayout: {}, novaPurchases: {}, novaLevels: {}, novaInputs: {},
 			fusions: {}, settings: clone(DEFAULT_SETTINGS)
 		};
 		var listeners = [];
@@ -175,7 +176,17 @@
 			ps.setRebirth(number, cycle);
 			offer({ kind: 'rebirth', what: what || 'number', number: ps.rebirthNumber, cycle: ps.rebirthCycle, snapshot: snap });
 		};
+		ps.toggleRebirthCheckWithUndo = function (path, number, index) {
+			var k = rbKey(path, number), prev = ps.rebirthChecks[k] ? ps.rebirthChecks[k].slice() : null, value = !ps.rebirthCheck(path, number, index);
+			ps.setRebirthCheck(path, number, index, value);
+			offer({ kind: 'rebirth_check', path: toIntOr(path, 1), number: toIntOr(number, 0), index: index, value: value, snapshot: { rebirth_check: { key: k, prev: prev } } });
+		};
 		ps.restoreSnapshot = function (snap) {
+			if (isObj(snap.rebirth_check)) {
+				var rc = snap.rebirth_check;
+				if (Array.isArray(rc.prev)) ps.rebirthChecks[String(rc.key)] = rc.prev.slice(0, 3).map(function (x) { return x === true; }); else delete ps.rebirthChecks[String(rc.key)];
+				changed('rebirth_check'); return;
+			}
 			if (has(snap, 'rebirth_number')) { ps.setRebirth(toIntOr(snap.rebirth_number, 0), toIntOr(snap.rebirth_cycle, 1)); return; }
 			var id = String(snap.droid_id || '');
 			if (id === '') return;
@@ -265,6 +276,19 @@
 			ps.rebirthCycle = dom.clamp(toIntOr(cycle, 1), 1, 99);
 			changed('rebirth');
 		};
+		/* Web-only (W5): which of the 3 required droids of a rebirth the player has obtained.
+		   Key "<path>:<number>" (path = rebirth cycle, 1 and up), value [bool, bool, bool]. Only rows with a true are kept.
+		   The Android app ignores this key when it imports a web backup. A backup without it gives no checks. */
+		function rbKey(path, number) { return dom.clamp(toIntOr(path, 1), 1, 99) + ':' + dom.clamp(toIntOr(number, 0), 0, MAX_REBIRTH_NUMBER); }
+		ps.rebirthCheck = function (path, number, index) { var a = ps.rebirthChecks[rbKey(path, number)]; return !!(a && a[index] === true); };
+		ps.setRebirthCheck = function (path, number, index, value) {
+			var i = toIntOr(index, -1);
+			if (i < 0 || i > 2) return;
+			var k = rbKey(path, number), a = (ps.rebirthChecks[k] || [false, false, false]).slice();
+			a[i] = value === true;
+			if (a.some(Boolean)) ps.rebirthChecks[k] = a; else delete ps.rebirthChecks[k];
+			changed('rebirth_check');
+		};
 		ps.novaLevel = function (id) { return has(ps.novaLevels, id) ? toIntOr(ps.novaLevels[id], 0) : 0; };
 		ps.setNovaLevel = function (id, level) {
 			var v = dom.clamp(toIntOr(level, 0), 0, MAX_NOVA_LEVEL);
@@ -298,12 +322,15 @@
 		ps.toDict = function () {
 			var ownedOut = {};
 			Object.keys(ps.owned).forEach(function (id) { ownedOut[id] = Object.keys(ps.owned[id]); });
-			return {
+			var out = {
 				format: FORMAT, version: FORMAT_VERSION, owned: ownedOut,
 				rebirth_number: ps.rebirthNumber, rebirth_cycle: ps.rebirthCycle, base_layout: ps.baseLayout,
 				nova_purchases: Object.keys(ps.novaPurchases), nova_levels: ps.novaLevels, nova_inputs: ps.novaInputs,
 				fusions: ps.fusions, settings: extSettings(ps.settings)
 			};
+			// Web-only key, written only when there is something to save (an Android-shaped save stays the same).
+			if (Object.keys(ps.rebirthChecks).length) out.rebirth_checks = clone(ps.rebirthChecks);
+			return out;
 		};
 		function extSettings(sett) {
 			var out = {};
@@ -325,6 +352,7 @@
 			ps.rebirthNumber = dom.clamp(toIntOr(d.rebirth_number, 0), 0, MAX_REBIRTH_NUMBER);
 			ps.rebirthCycle = dom.clamp(toIntOr(d.rebirth_cycle, 1), 1, 99);
 			ps.baseLayout = cleanLayout(d.base_layout);
+			ps.rebirthChecks = cleanRebirthChecks(d.rebirth_checks);
 			ps.novaPurchases = {};
 			if (Array.isArray(d.nova_purchases)) d.nova_purchases.forEach(function (id) { if (isStr(id) && has(gd.novaById, id)) ps.novaPurchases[id] = true; });
 			ps.novaLevels = {};
@@ -355,6 +383,16 @@
 			return out;
 		}
 		// Unknown recipes, variants and bad fields are dropped. The old shape (status, variant, have) is migrated.
+		function cleanRebirthChecks(src) {
+			var out = {}, n = 0;
+			if (!isObj(src)) return out;
+			Object.keys(src).forEach(function (k) {
+				if (n >= MAX_REBIRTH_CHECK_ROWS || !/^\d{1,2}:\d{1,4}$/.test(k) || !Array.isArray(src[k])) return;
+				var a = [src[k][0] === true, src[k][1] === true, src[k][2] === true];
+				if (a.some(Boolean)) { out[k] = a; n++; }
+			});
+			return out;
+		}
 		function cleanFusions(src) {
 			var out = {};
 			if (!isObj(src)) return out;

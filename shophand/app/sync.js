@@ -225,6 +225,15 @@
 			editCount++;
 			persist();
 		};
+		// Online saving was turned off. The data stays on this device but no longer belongs to an account.
+		// A later opt-in starts as new data for a new account (push, no conflict).
+		self.forgetAccount = function () {
+			uid = ''; retryN = 0;
+			if (debounceT) { timers.clear(debounceT); debounceT = null; firstEditAt = 0; }
+			if (retryT) { timers.clear(retryT); retryT = null; }
+			rec.uid = ''; rec.cloudSeen = 0; rec.dirty = false;
+			persist(); setStatus('local');
+		};
 		// After linking or switching: the record now belongs to this account.
 		self.claim = function (newUid) { rec.uid = newUid; persist(); };
 		// The sign-in kind changed (a link was added): save again so users/{uid}.kind is current. Skips an empty guest.

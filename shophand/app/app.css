@@ -679,3 +679,40 @@ input[type="file"].sr-only { position: absolute; }
 .nova-row .stepper .btn { min-height: 2.75rem; }
 .nova-row .btn.step { min-width: 2.75rem; }
 .nova-row .btn.val { min-width: 3.75rem; padding: 0 0.5rem; }
+
+/* W5: user id and consent sheet */
+code.uid { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.875rem; user-select: all; word-break: break-all; padding: 0.125rem 0.375rem; border-radius: 0.375rem; background: var(--bg); border: 1px solid var(--border); }
+
+/* W5: tap a required droid in a rebirth row to mark it obtained (check mark and word, not colour alone) */
+button.req-check { width: 100%; min-height: 3.5rem; text-align: left; color: inherit; font: inherit; cursor: pointer; padding: 0.375rem 0.5rem; margin-top: 0.375rem;
+	background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); }
+button.req-check:hover { border-color: var(--accent-text); }
+button.req-check.got { border-color: var(--green); background: color-mix(in srgb, var(--green) 16%, var(--bg)); }
+.req-mark { display: inline-flex; align-items: center; gap: 0.375rem; flex: none; font-weight: 700; font-size: 0.875rem; max-width: 6.5rem; text-align: left; line-height: 1.1; color: var(--text-dim); }
+.req-check.got .req-mark { color: var(--green); }
+.req-box { width: 1.375rem; height: 1.375rem; border: 2px solid var(--text-dim); border-radius: 0.375rem; flex: none; }
+.req-ico { width: 1.375rem; height: 1.375rem; flex: none; }
+
+/* W5: account button in the top bar (online-saving status at a glance) */
+.top-actions { min-width: 0; }
+.acct-btn { display: inline-flex; align-items: center; gap: 0.375rem; min-width: 0; max-width: 100%; padding: 0 0.625rem; }
+.acct-btn .acct-ico { width: 1.25rem; height: 1.25rem; flex: none; }
+.acct-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 11rem; }
+.acct-btn[data-on="true"] { border-color: color-mix(in srgb, var(--green) 60%, var(--border)); }
+.acct-kind { flex: none; display: inline-flex; align-items: center; justify-content: center; min-width: 1.125rem; height: 1.125rem; padding: 0 0.125rem; border-radius: 999px;
+	border: 1.5px solid var(--text-dim); font: 700 0.6875rem/1 var(--font-head); color: var(--text-dim); }
+.acct-kind[data-kind="guest"] { border-style: dashed; }
+.acct-kind[hidden] { display: none; }
+@media (max-width: 420px) { .acct-label { max-width: none; flex: 0 1 auto; } .acct-btn { flex: 0 1 auto; } }
+.top .brand { white-space: nowrap; flex: none; }
+.top-actions { flex: 0 1 auto; }
+.about-lang { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+@media (max-width: 420px) {
+	.top { gap: 0.375rem; padding-left: max(0.75rem, env(safe-area-inset-left)); padding-right: max(0.75rem, env(safe-area-inset-right)); }
+	.top .brand { font-size: 1.125rem; gap: 0.375rem; }
+	.top .brand-tile { width: 1.625rem; height: 1.625rem; font-size: 1rem; }
+	.top-actions { gap: 0.375rem; }
+	.acct-btn { padding: 0 0.5rem; gap: 0.25rem; font-size: 0.875rem; }
+	.acct-btn .acct-ico { width: 1.125rem; height: 1.125rem; }
+	#about-btn { padding: 0 0.625rem; min-width: 0; }
+}

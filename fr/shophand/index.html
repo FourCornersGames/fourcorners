@@ -21,7 +21,7 @@
 <header class="top">
 	<h1 class="brand"><span class="brand-tile" aria-hidden="true">S</span>Shop Hand</h1>
 	<div class="top-actions">
-		<a class="btn" href="/shophand/" hreflang="en" lang="en" title="Changer de langue">English</a>
+		<button class="btn acct-btn" id="acct-btn" type="button" aria-label="Compte et sauvegarde en ligne"><svg class="ico acct-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="acct-label" data-i18n="On this device">Sur cet appareil</span><span class="acct-kind" aria-hidden="true" hidden></span></button>
 		<a class="btn" id="about-btn" href="#about" data-i18n="About">À propos</a>
 	</div>
 </header>
@@ -38,13 +38,12 @@
 </main>
 </div>
 <dialog class="about" id="about" aria-labelledby="about-title"></dialog>
-<script defer src="/shophand/app/vendor/firebase-app-compat.js"></script>
-<script defer src="/shophand/app/vendor/firebase-auth-compat.js"></script>
 <script defer src="/shophand/app/firebase-config.js"></script>
 <script defer src="/shophand/app/strings.js"></script>
 <script defer src="/shophand/app/domain.js"></script>
 <script defer src="/shophand/app/state.js"></script>
 <script defer src="/shophand/app/sync.js"></script>
+<script defer src="/shophand/app/consent.js"></script>
 <script defer src="/shophand/app/ui.js"></script>
 <script defer src="/shophand/app/cloud.js"></script>
 <script defer src="/shophand/app/art.js"></script>
