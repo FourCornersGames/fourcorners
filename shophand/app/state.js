@@ -547,8 +547,15 @@
 		return null;
 	}
 
+	// The first found document of a Firestore :batchGet answer, or null. :batchGet answers 200 with "missing" for a
+	// document that does not exist, so a normal "no" never makes a 404 in the browser console.
+	function firstFound(json) {
+		var item = Array.isArray(json) ? json[0] : null;
+		return item && item.found && item.found.fields ? item.found : null;
+	}
+
 	return {
-		FORMAT: FORMAT, FORMAT_VERSION: FORMAT_VERSION, MAX_IMPORT_BYTES: MAX_IMPORT_BYTES, MAX_DEPTH: MAX_DEPTH, MAX_SLOTS: MAX_SLOTS,
+		firstFound: firstFound, FORMAT: FORMAT, FORMAT_VERSION: FORMAT_VERSION, MAX_IMPORT_BYTES: MAX_IMPORT_BYTES, MAX_DEPTH: MAX_DEPTH, MAX_SLOTS: MAX_SLOTS,
 		MAX_NOVA_LEVEL: MAX_NOVA_LEVEL, NOVA_INPUT_MAX: NOVA_INPUT_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS, ID_RENAMES: ID_RENAMES,
 		createPlayerState: createPlayerState, migrateIds: migrateIds, checkImport: checkImport, tooDeep: tooDeep, backupFileName: backupFileName,
 		decideSync: decideSync, extKey: extKey, validName: validName, accountKind: accountKind, randomName: randomName, NAME_WORDS_A: NAME_WORDS_A, NAME_WORDS_B: NAME_WORDS_B, toFsValue: toFsValue, fromFsValue: fromFsValue, createBlank: createBlank

@@ -647,8 +647,30 @@
 		return entries.map(function (e) { return e.d; });
 	}
 
+	/* ---------- a timer that can pause (the toast) ---------- */
+
+	// A countdown that pauses and resumes. fn runs once after ms of un-paused time. timers = {set, clear} (default: the globals),
+	// now() = a clock in ms. Keeps the time left, so a pause never gives a longer or shorter total.
+	function pauseTimer(fn, ms, timers, now) {
+		var set = (timers && timers.set) || function (f, m) { return setTimeout(f, m); };
+		var clr = (timers && timers.clear) || function (id) { clearTimeout(id); };
+		var clock = now || Date.now;
+		var left = ms, id = null, started = 0, done = false;
+		function fire() { id = null; if (!done) { done = true; fn(); } }
+		function run() { started = clock(); id = set(fire, Math.max(0, left)); }
+		var self = {
+			pause: function () { if (id === null || done) return; clr(id); id = null; left -= clock() - started; },
+			resume: function () { if (id !== null || done) return; run(); },
+			cancel: function () { if (id !== null) clr(id); id = null; done = true; },
+			left: function () { return id === null ? left : left - (clock() - started); },
+			running: function () { return id !== null; }
+		};
+		run();
+		return self;
+	}
+
 	return {
-		has: has, isNum: isNum, isStr: isStr, isObj: isObj, sprintf: sprintf, naturalCmp: naturalCmp, clamp: clamp, toInt: toInt,
+		pauseTimer: pauseTimer, has: has, isNum: isNum, isStr: isStr, isObj: isObj, sprintf: sprintf, naturalCmp: naturalCmp, clamp: clamp, toInt: toInt,
 		formatNumber: formatNumber, formatExact: formatExact,
 		buildIndexes: buildIndexes, isUsableData: isUsableData, orderedTiers: orderedTiers, variantsOf: variantsOf,
 		rarityOrders: rarityOrders, cycles: cycles, rebirthRow: rebirthRow, maxRebirth: maxRebirth, hasChipData: hasChipData,

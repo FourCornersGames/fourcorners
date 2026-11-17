@@ -74,6 +74,25 @@ A free tracker page, plain HTML, CSS and JavaScript, no build step. Not listed i
   policy text changes in a way that needs new consent. The Firestore database is in Montreal
   (`northamerica-northeast1`); Firebase Authentication is processed by Google (US). The cookie pages
   mention Shop Hand: keep them in step.
+- **Release version (cache busting). Bump the version on every Shop Hand change** (code, strings, data, CSS, icons).
+  The version looks like `YYYYMMDD-n` (the date, then 1, 2, 3... for that day). It is written in four places and
+  must be the same in all of them (the tests check this):
+  1. `<meta name="sh-version" content="...">` in `shophand/index.html` and `fr/shophand/index.html`. This is the
+     one the page reads at run time (`SH.version`, `SH.versioned(url)` in `ui.js`) for the lazy vendor scripts and
+     the `gamedata.json` fetch.
+  2. every `?v=...` on the `/shophand/app/*` files in both index pages.
+  3. `version` in `shophand/sw.js` and `fr/shophand/sw.js`, and the `?v=` of their `importScripts`.
+  To bump: replace the old version text in those four places (search for it in `shophand/` and `fr/shophand/`),
+  then run the tests. A new `sw.js` makes browsers install a new service worker and a new cache.
+- **Installable web app (PWA).** `shophand/manifest.webmanifest` and `fr/shophand/manifest.webmanifest`, the
+  placeholder icons in `shophand/icons/` (a white S on the brand-tile colour; the owner replaces them),
+  `shophand/sw.js` (scope `/shophand/`) and `fr/shophand/sw.js` (scope `/fr/shophand/`). Both use
+  `shophand/app/sw-core.js`. The worker keeps only the site's own files in a cache named
+  `shophand-<lang>-<version>`, deletes old caches when it activates, loads the page network first (cache as
+  fallback) and the versioned files cache first. It never handles Google or Firebase hosts, other pages or `/dev/`
+  (see `route()` in `sw-core.js`, and its tests). A new worker waits: the page shows "A new version is ready.
+  Reload" (`pwa.js`) and never reloads by itself. If you add, rename or remove a file the page loads, change
+  `APP_FILES` in `sw-core.js` too (a test compares it with the index pages).
 - Retention: `tools/retention.py` in the app repo deletes inactive accounts (guest 12 months, linked
   24 months). Run it every three months.
 - `shophand/app/strings.js` and `shophand/data/gamedata.json` are made by `tools/export_web.py` in the app

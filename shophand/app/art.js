@@ -1,8 +1,9 @@
 /* Shop Hand private art (milestone W4, owner only).
    The droid images are never in the site files. After sign-in the page tries to read the Firestore collection
    private_art. The rules allow it only for an account listed in art_readers (set by the studio, not by the page).
-   If the read is allowed, the images go in IndexedDB and show instead of the letter tiles. If it is denied,
-   the page stays with the letter tiles, silently. The cache is cleared on sign-out, on a denied read and when the
+   The page first reads its own art_readers record (a "missing" answer is a normal "no", no console error). Only a
+   trusted account goes on: the images go in IndexedDB and show instead of the letter tiles. Anyone else stays with
+   the letter tiles and makes no image request. The cache is cleared on sign-out, on a denied read and when the
    account changes, so a next person on the same browser never sees it. */
 (function () {
 	'use strict';
@@ -66,33 +67,37 @@
 	};
 
 	// Called with the signed-in uid. cloud: SH.cloud.
-	// A "denied" answer is remembered for 10 minutes on this device, so a visitor who is not the owner does not send
-	// a request on every page load. Signing in or linking again clears it (art.forget).
-	var DENIED_KEY = 'shophand.artdenied', DENIED_MS = 600000; // 10 min: a newly trusted player waits at most this long
-	function deniedRecently(uid) {
-		try { var d = JSON.parse(localStorage.getItem(DENIED_KEY)); return !!d && d.uid === uid && Date.now() - d.at < DENIED_MS; } catch (e) { return false; }
-	}
-	art.forget = function () { try { localStorage.removeItem(DENIED_KEY); } catch (e) { /* no storage */ } checkedUid = ''; };
+	// First the page reads its own art_readers record (allowed for every signed-in player, a "no" is not an error).
+	// Not trusted: no request for private_art at all. Trusted: the images load as below.
+	// Signing in or linking again calls art.forget, so a newly trusted player is looked at again.
+	try { localStorage.removeItem('shophand.artdenied'); } catch (e) { /* no storage; the old 10-minute marker is not used any more */ }
+	art.forget = function () { checkedUid = ''; };
 	art.check = function (uid, cloud) {
 		if (!uid || running || checkedUid === uid) return Promise.resolve();
-		if (deniedRecently(uid)) { checkedUid = uid; return Promise.resolve(); }
 		running = true;
 		var cached = {}, owner = '';
-		return open().then(function () {
-			return tx(META, 'readonly', function (s) { return s.get('uid'); }).then(function (u) { owner = u || ''; });
-		}).then(function () {
-			return tx(STORE, 'readonly', function (s) { return s.getAll(); });
-		}).then(function (rowsv) {
-			// Show the cache only for the account that filled it (it works offline for the owner).
-			return tx(STORE, 'readonly', function (s) { return s.getAllKeys(); }).then(function (keys) {
-				if (owner === uid) {
-					keys.forEach(function (k, i) { var row = rowsv[i]; if (row && row.blob) { cached[k] = row.updated || 0; setUrl(k, row.blob); } });
-					if (keys.length) notify();
-				} else if (keys.length) { return art.clear(); }
+		function showCache() {
+			return open().then(function () {
+				return tx(META, 'readonly', function (s) { return s.get('uid'); }).then(function (u) { owner = u || ''; });
+			}).then(function () {
+				return tx(STORE, 'readonly', function (s) { return s.getAll(); });
+			}).then(function (rowsv) {
+				// Show the cache only for the account that filled it (it works offline for the owner).
+				return tx(STORE, 'readonly', function (s) { return s.getAllKeys(); }).then(function (keys) {
+					if (owner === uid) {
+						keys.forEach(function (k, i) { var row = rowsv[i]; if (row && row.blob) { cached[k] = row.updated || 0; setUrl(k, row.blob); } });
+						if (keys.length) notify();
+					} else if (keys.length) { return art.clear(); }
+				});
+			}).catch(function () { /* no IndexedDB: the page works without the cache */ });
+		}
+		return cloud.isTrusted(uid).then(function (yes) {
+			if (!yes) return art.clear().then(function () { checkedUid = uid; return null; });   // clear() resets checkedUid, so set it after
+			return showCache().then(function () {
+				return cloud.listArt();
 			});
-		}).catch(function () { /* no IndexedDB: the page works without the cache */ }).then(function () {
-			return cloud.listArt();
 		}).then(function (list) {
+			if (!list) return;   // not trusted: letter tiles, no image request was made
 			// Allowed. Fetch the new or changed images, 4 at a time.
 			var todo = list.filter(function (x) { return !(x.id in cached) || (x.updated && x.updated > cached[x.id]); });
 			var i = 0;
@@ -108,16 +113,11 @@
 			}
 			var gone = Object.keys(urls).filter(function (k) { return !list.some(function (x) { return x.id === k; }); });
 			gone.forEach(function (k) { URL.revokeObjectURL(urls[k]); delete urls[k]; });
-			try { localStorage.removeItem(DENIED_KEY); } catch (e) { /* no storage */ }
 			return Promise.all([worker(), worker(), worker(), worker()]).then(function () {
 				return tx(META, 'readwrite', function (s) { return s.put(uid, 'uid'); }).catch(function () {});
 			}).then(function () { checkedUid = uid; notify(); });
 		}, function (err) {
-			if (err && err.code === 'denied') {
-				checkedUid = uid;
-				try { localStorage.setItem(DENIED_KEY, JSON.stringify({ uid: uid, at: Date.now() })); } catch (e) { /* no storage */ }
-				return art.clear();
-			}   // not the owner: letter tiles, silently
+			if (err && err.code === 'denied') return art.clear().then(function () { checkedUid = uid; });   // fallback: the read was refused
 			// offline or a server error: keep what is shown, try again at the next sign-in or page load
 		}).then(function () { running = false; }, function () { running = false; });
 	};
