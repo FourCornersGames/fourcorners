@@ -442,10 +442,10 @@
 		function maxSuper() { var c = dom.cycles(gd()); return c.length ? Math.max(Math.max.apply(null, c) - 1, 0) : 4; }
 		function pathNow() { return dom.clamp(ps().rebirthCycle, 1, maxSuper() + 1); }
 		var superStep = ui.stepper({ minusLabel: '-', plusLabel: '+', onStep: function (d) {
-			scrollPending = true; ps().setRebirth(ps().rebirthNumber, dom.clamp(pathNow() - 1 + d, 0, maxSuper()) + 1); },
+			ps().setRebirth(ps().rebirthNumber, dom.clamp(pathNow() - 1 + d, 0, maxSuper()) + 1); },
 			onValue: function () { ui.numberSheet({ title: t('Super rebirth count'), min: 0, max: maxSuper(), value: pathNow() - 1 }).then(function (v) {
 				if (v == null) return; scrollPending = true; ps().setRebirthWithUndo(ps().rebirthNumber, dom.clamp(v, 0, maxSuper()) + 1, 'super'); }); } });
-		var numStep = ui.stepper({ onStep: function (d) { scrollPending = true; ps().setRebirth(dom.clamp(ps().rebirthNumber + d, 0, dom.maxRebirth(gd(), pathNow())), pathNow()); },
+		var numStep = ui.stepper({ onStep: function (d) { ps().setRebirth(dom.clamp(ps().rebirthNumber + d, 0, dom.maxRebirth(gd(), pathNow())), pathNow()); },
 			onValue: function () { var path = pathNow(); ui.numberSheet({ title: t('Current rebirth'), min: 0, max: dom.maxRebirth(gd(), path), value: ps().rebirthNumber }).then(function (v) {
 				if (v == null) return; scrollPending = true; ps().setRebirthWithUndo(dom.clamp(v, 0, dom.maxRebirth(gd(), path)), path, 'number'); }); } });
 		var steppers = h('div', { class: 'row-card steppers' },
