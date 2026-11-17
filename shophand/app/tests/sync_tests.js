@@ -33,6 +33,7 @@ function fakeCloud() {
 		if (!c.online) return Promise.reject(offlineError());
 		c.writes++; c.clock += 1000;
 		c.docs[uid] = { state: JSON.parse(JSON.stringify(p.state)), name: p.name, updated: c.clock };
+		if (p.kind) c.docs[uid].kind = p.kind;
 		return Promise.resolve({ updated: c.clock });
 	};
 	return c;
@@ -45,7 +46,7 @@ async function run(h) {
 	function make(over) {
 		var ps = h.newPs(), storage = (over && over.storage) || fakeStorage(), cloud = (over && over.cloud) || fakeCloud(), timers = fakeTimers();
 		var asked = [], answer = over && over.answer;
-		var s = sync.createSync({ ps: ps, storage: storage, cloud: cloud, timers: timers, now: function () { return timers.now; }, rng: function () { return 0; },
+		var s = sync.createSync({ kind: over && over.kind, ps: ps, storage: storage, cloud: cloud, timers: timers, now: function () { return timers.now; }, rng: function () { return 0; },
 			askConflict: function (info) { asked.push(info); return Promise.resolve(answer); } });
 		s.loadLocal(); s.start();
 		return { ps: ps, s: s, storage: storage, cloud: cloud, timers: timers, asked: asked };
@@ -123,6 +124,16 @@ async function run(h) {
 	// 8. Signed out: only local. Reset gives a clean device.
 	var o = make(); o.ps.setTierOwned('cb', 'base', true); o.timers.advance(5000); await settle(); eq(o.cloud.writes, 0, 'sync: no cloud write without an account'); eq(o.s.getStatus(), 'local', 'sync: status local without an account');
 	o.s.resetLocal(); ok(o.ps.isEmpty(), 'sync: reset gives empty data'); eq(o.s.name(), '', 'sync: reset clears the name');
+
+	// 8b. The account kind is saved with the data and refreshed after a link.
+	var kk = { v: 'guest' }, kg = make({ kind: function () { return kk.v; } });
+	await kg.s.attach('k1'); kg.ps.setTierOwned('cb', 'base', true); kg.timers.advance(2100); await settle();
+	eq(kg.cloud.docs.k1.kind, 'guest', 'sync: a guest save has kind guest');
+	kk.v = 'google'; kg.s.refreshKind(); kg.timers.advance(2100); await settle();
+	eq(kg.cloud.docs.k1.kind, 'google', 'sync: after linking, the next save has the new kind');
+	var ke = make({ kind: function () { return 'admin'; } }); await ke.s.attach('k2'); ke.ps.setTierOwned('cb', 'base', true); ke.timers.advance(2100); await settle();
+	ok(!('kind' in ke.cloud.docs.k2), 'sync: an unknown kind is never saved');
+	var kn = make(); await kn.s.attach('k3'); kn.s.refreshKind(); kn.timers.advance(2100); await settle(); eq(kn.cloud.writes, 0, 'sync: refreshKind writes nothing for an empty guest');
 
 	// 9. Storage that throws (private window) does not crash. A corrupt record is ignored. A save over the document limit is not sent.
 	var bad = { getItem: function () { throw new Error('no'); }, setItem: function () { throw new Error('no'); } };

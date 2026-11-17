@@ -7,7 +7,7 @@
      "dirty" = a change on this device that the cloud has not got yet. "cloudSeen" = the cloud "updated" time (ms,
      server clock) that this device last saw or wrote. "edited" is for display only. A flag, not a clock
      comparison, decides what changed: the device clock and the server clock can differ.
-     Cloud doc: users/{uid} = {schema: 1, state, updated: server time, name}.
+     Cloud doc: users/{uid} = {schema: 1, state, updated: server time, name, kind}. kind = guest, google or email.
    - Every change is written to localStorage at once. The cloud write is debounced (about 2 s) and retried when it fails.
    - On sign-in or start, compare with the cloud doc (decideSync):
        no cloud doc               -> push local (if local has data)
@@ -451,6 +451,17 @@
 		return a + b + (10 + Math.floor(rng() * 990));
 	}
 
+	/* ---------- Account kind ---------- */
+	// The strongest linked sign-in, saved as users/{uid}.kind: "guest", "google" or "email" (google wins over email).
+	// Only the kind of sign-in is derived. Nothing else from the provider (email, name, photo) is read or stored.
+	// providerIds: the providerId strings of the Firebase Auth user (google.com, password, emailLink).
+	function accountKind(providerIds) {
+		var ids = Array.isArray(providerIds) ? providerIds : [];
+		if (ids.indexOf('google.com') !== -1) return 'google';
+		if (ids.indexOf('password') !== -1 || ids.indexOf('emailLink') !== -1) return 'email';
+		return 'guest';
+	}
+
 	/* ---------- sync decision (pure) ---------- */
 
 	// local: {dirty, cloudSeen, uid, empty}. cloud: null or {updated (ms)}. uid: the signed-in uid.
@@ -498,6 +509,6 @@
 		FORMAT: FORMAT, FORMAT_VERSION: FORMAT_VERSION, MAX_IMPORT_BYTES: MAX_IMPORT_BYTES, MAX_DEPTH: MAX_DEPTH, MAX_SLOTS: MAX_SLOTS,
 		MAX_NOVA_LEVEL: MAX_NOVA_LEVEL, NOVA_INPUT_MAX: NOVA_INPUT_MAX, DEFAULT_SETTINGS: DEFAULT_SETTINGS, ID_RENAMES: ID_RENAMES,
 		createPlayerState: createPlayerState, migrateIds: migrateIds, checkImport: checkImport, tooDeep: tooDeep, backupFileName: backupFileName,
-		decideSync: decideSync, extKey: extKey, validName: validName, randomName: randomName, NAME_WORDS_A: NAME_WORDS_A, NAME_WORDS_B: NAME_WORDS_B, toFsValue: toFsValue, fromFsValue: fromFsValue, createBlank: createBlank
+		decideSync: decideSync, extKey: extKey, validName: validName, accountKind: accountKind, randomName: randomName, NAME_WORDS_A: NAME_WORDS_A, NAME_WORDS_B: NAME_WORDS_B, toFsValue: toFsValue, fromFsValue: fromFsValue, createBlank: createBlank
 	};
 });

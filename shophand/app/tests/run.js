@@ -510,6 +510,14 @@ var cost = function (a, b) { return dom.costFor(a, b, gd.incomeByKey, gd.droidsB
 	eq(st.randomName(function () { return 0; }), 'BrassGear10', 'name: first words and 10'); eq(st.randomName(function () { return 0.999999; }), 'JollyRotor999', 'name: last words and 999');
 })();
 
+/* ---------- Account kind ---------- */
+(function () {
+	eq(st.accountKind([]), 'guest', 'kind: no providers is a guest'); eq(st.accountKind(undefined), 'guest', 'kind: undefined is a guest');
+	eq(st.accountKind(['google.com']), 'google', 'kind: google'); eq(st.accountKind(['password']), 'email', 'kind: password is email');
+	eq(st.accountKind(['emailLink']), 'email', 'kind: email link is email'); eq(st.accountKind(['password', 'google.com']), 'google', 'kind: google wins over email');
+	eq(st.accountKind(['google.com', 'password']), 'google', 'kind: order does not matter'); eq(st.accountKind(['phone', 'facebook.com']), 'guest', 'kind: other providers count as guest');
+})();
+
 /* ---------- Hard rules on the site files ---------- */
 (function () {
 	var bad = new RegExp(['star\\s*wars', 'droid[\\s_-]*ty' + 'coon', 'droi' + 'dex'].join('|'), 'i'), files = [];

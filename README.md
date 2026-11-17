@@ -174,7 +174,7 @@ at once (each game has its own accounts), each game's own rules decide whether
 that account is a dev there, and a card per game says **Open** or why not ("no
 account with this email and password", "not a dev here yet: needs ..."). Each
 game's session is kept in `sessionStorage` under the keys its panel already
-reads (`ia-dev-*`, `yt-dev-*`, `bk-dev-*`), so a panel opens signed in. A panel
+reads (`ia-dev-*`, `yt-dev-*`, `bk-dev-*`, `sh-dev-*`), so a panel opens signed in. A panel
 with no session sends you to `/dev/#<game>` and comes back after sign-in;
 **Sign out** in any panel signs out of all of them; every panel has an
 **All Games** link. For one sign-in to open every game, give your dev account
@@ -234,3 +234,29 @@ the YarnToss panel, it only talks to Google's Firebase APIs once a dev signs in.
   its next launch; edit while that player's game is closed, or the running game
   overwrites it. Change `COUNTER_BUMP` / `encodeSave()` in `app.js` together
   with the game's `OnlineRules` if the save document's shape changes.
+
+## Dev panel (`/dev/shophand/`)
+
+A hidden page for the Shop Hand admins (Firebase project `shophand-fcg`, the page is `/shophand/`):
+the players, a player page and the **Trusted** switch. Not linked from anywhere and marked `noindex`,
+but the URL is not the protection: everything goes through Firestore with the dev's own login, and the
+rules only allow it for accounts with `admins/{uid}` and `enabled: true` (`isAdmin()` in the app repo's
+`firebase/firestore.rules`; plan in `docs/WEB_PLAN.md`, "Dev panel"). Like the other panels, it only talks
+to Google's Firebase APIs once a dev signs in, and the `/dev/` gateway opens it (its Shop Hand card checks
+the `admins/{uid}` document).
+
+- **Privacy rule (owner decision, strict): the studio never sees players' emails or real names.** The panel
+  shows only the player's chosen name, the uid, the account kind (`guest`, `google` or `email`, saved by the
+  page in `users/{uid}.kind`) and the save data. It never reads Auth user records (no Identity Toolkit
+  lookups), emails, display names or photos. Keep it that way when you add features.
+- **Players:** every `users` document, newest save first, 100 at a time with **Load more**. Search is by name
+  and covers the rows loaded so far. Columns: name, kind, last save, droids owned, Trusted.
+- **Player page** (`#/player/<uid>`): name, uid, kind, last save, a summary of the save, the whole save as
+  JSON (collapsed), **Download backup** (the same JSON the Shop Hand page imports) and **Rename**. The rules
+  let an admin change only `name`, with `updated` set to the server time, so the player's device takes the
+  new name at its next sync.
+- **Trusted:** on creates `art_readers/<uid>` (`{by, at}`, after a confirm), off deletes it. Trusted players
+  can see the droid images (`private_art`). Only trust people you know. Read-only for everything else: the
+  panel cannot edit a save.
+- Sign in with the **email and password** of the admin account (the same email and password as the other
+  games). The `admins/{uid}` document is made in the Firebase console, never by a client.

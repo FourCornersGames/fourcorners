@@ -17,7 +17,7 @@
 	var DEBOUNCE_MS = 2000, MAX_WAIT_MS = 10000, RETRY_MIN_MS = 2000, RETRY_MAX_MS = 60000;
 	var MAX_DOC_BYTES = 900000; // The Firestore limit is 1 MB per document.
 
-	// opts: {ps, storage {getItem,setItem,removeItem}, cloud {getSave,setSave}, now(), timers {set, clear}, askConflict(info), rng}
+	// opts: {ps, storage {getItem,setItem,removeItem}, cloud {getSave,setSave}, now(), timers {set, clear}, askConflict(info), rng, kind() -> guest|google|email}
 	function createSync(opts) {
 		var ps = opts.ps, storage = opts.storage, cloud = opts.cloud;
 		var now = opts.now || function () { return Date.now(); };
@@ -76,6 +76,11 @@
 			debounceT = timers.set(function () { debounceT = null; firstEditAt = 0; self.flush(); }, wait);
 		}
 
+		// "guest", "google" or "email" from opts.kind (a function), or '' when not known. Never anything else about the account.
+		function currentKind() {
+			var k = opts.kind ? opts.kind() : '';
+			return k === 'guest' || k === 'google' || k === 'email' ? k : '';
+		}
 		function ensureName() {
 			if (!rec.name) { rec.name = st.randomName(opts.rng); persist(); }
 			return rec.name;
@@ -93,7 +98,7 @@
 			var myUid = uid, v = editCount, dict = ps.toDict();
 			if (JSON.stringify(dict).length > MAX_DOC_BYTES) { setStatus('too_big'); return Promise.resolve(); }
 			busy = true; setStatus('syncing');
-			return Promise.resolve().then(function () { return cloud.setSave(myUid, { state: dict, name: ensureName() }); }).then(function (res) {
+			return Promise.resolve().then(function () { return cloud.setSave(myUid, { state: dict, name: ensureName(), kind: currentKind() }); }).then(function (res) {
 				busy = false;
 				if (myUid !== uid) return;
 				rec.cloudSeen = res.updated; retryN = 0;
@@ -222,6 +227,8 @@
 		};
 		// After linking or switching: the record now belongs to this account.
 		self.claim = function (newUid) { rec.uid = newUid; persist(); };
+		// The sign-in kind changed (a link was added): save again so users/{uid}.kind is current. Skips an empty guest.
+		self.refreshKind = function () { if (uid && !ps.isEmpty()) markChanged(); };
 
 		return self;
 	}

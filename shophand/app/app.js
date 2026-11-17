@@ -206,7 +206,7 @@
 	function linkGoogle() {
 		SH.art.forget();
 		SH.cloud.linkGoogle().then(function (r) {
-			if (r.ok) { C.sync.claim(SH.cloud.uid()); ui.toast(t('Google is linked to your account.')); buildAbout(); }
+			if (r.ok) { C.sync.claim(SH.cloud.uid()); C.sync.refreshKind(); ui.toast(t('Google is linked to your account.')); buildAbout(); }
 			else if (r.inUse) return handleInUse(r);
 		}).catch(function (e) { ui.alert(t('Sign-in'), errText(e)); });
 	}
@@ -241,7 +241,7 @@
 			if (em == null) { done(); return; }
 			return SH.cloud.completeEmailLink(em, href).then(function (r) {
 				done();
-				if (r.ok) { C.sync.claim(SH.cloud.uid()); ui.toast(t('Your email is linked.')); }
+				if (r.ok) { C.sync.claim(SH.cloud.uid()); C.sync.refreshKind(); ui.toast(t('Your email is linked.')); }
 				else if (r.inUse) return handleInUse(r);
 			}, function (e) { done(); return ui.alert(t('Sign-in'), errText(e)); });
 		});
@@ -419,7 +419,7 @@
 		C.gd = dom.buildIndexes(D);
 		C.ps = st.createPlayerState(C.gd);
 		C.art = SH.art;
-		C.sync = SH.sync.createSync({ ps: C.ps, storage: makeStorage(), cloud: cloudAdapter, askConflict: askConflict });
+		C.sync = SH.sync.createSync({ ps: C.ps, storage: makeStorage(), cloud: cloudAdapter, askConflict: askConflict, kind: function () { return SH.cloud && SH.cloud.available ? SH.cloud.kind() : ''; } });
 		C.sync.loadLocal();
 		C.sync.start();
 		C.ps.onUndo(toastUndo);

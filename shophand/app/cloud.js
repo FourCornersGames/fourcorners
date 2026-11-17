@@ -50,6 +50,13 @@
 		return out;
 	};
 
+	// The account kind saved with the data: "guest", "google" or "email". Derived from the provider ids only.
+	cloud.kind = function () {
+		var u = cloud.user();
+		if (!u) return '';
+		return st.accountKind((u.providerData || []).map(function (p) { return p.providerId; }));
+	};
+
 	// Start as a guest (anonymous) so saving works at once. Retries when the network comes back.
 	function ensureGuest() {
 		if (!auth || auth.currentUser || guestTimer) return;
@@ -169,8 +176,10 @@
 	};
 	// One commit: the fields and the server time for "updated" (the rules need updated == request.time).
 	cloud.setSave = function (uid, p) {
+		var fields = { schema: { integerValue: '1' }, state: st.toFsValue(p.state), name: { stringValue: p.name } };
+		if (p.kind) fields.kind = { stringValue: p.kind };
 		var body = { writes: [{
-			update: { name: DB_NAME + '/users/' + uid, fields: { schema: { integerValue: '1' }, state: st.toFsValue(p.state), name: { stringValue: p.name } } },
+			update: { name: DB_NAME + '/users/' + uid, fields: fields },
 			updateTransforms: [{ fieldPath: 'updated', setToServerValue: 'REQUEST_TIME' }]
 		}] };
 		return fs('POST', BASE + ':commit', body).then(function (r) { return { updated: ms(r.json && r.json.commitTime) || Date.now() }; });
