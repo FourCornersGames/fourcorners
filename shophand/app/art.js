@@ -66,9 +66,9 @@
 	};
 
 	// Called with the signed-in uid. cloud: SH.cloud.
-	// A "denied" answer is remembered for an hour on this device, so a visitor who is not the owner does not send
+	// A "denied" answer is remembered for 10 minutes on this device, so a visitor who is not the owner does not send
 	// a request on every page load. Signing in or linking again clears it (art.forget).
-	var DENIED_KEY = 'shophand.artdenied', DENIED_MS = 3600000;
+	var DENIED_KEY = 'shophand.artdenied', DENIED_MS = 600000; // 10 min: a newly trusted player waits at most this long
 	function deniedRecently(uid) {
 		try { var d = JSON.parse(localStorage.getItem(DENIED_KEY)); return !!d && d.uid === uid && Date.now() - d.at < DENIED_MS; } catch (e) { return false; }
 	}
