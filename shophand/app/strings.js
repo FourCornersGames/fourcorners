@@ -66,7 +66,7 @@ window.SH_STRINGS = {
 },
 "Saved %s.": {
 "en": "Saved %s.",
-"fr": "%s enregistré."
+"fr": "Enregistré : %s."
 },
 "Load failed: no file was chosen.": {
 "en": "Load failed: no file was chosen.",
@@ -1359,6 +1359,26 @@ window.SH_STRINGS = {
 "Decide later": {
 "en": "Decide later",
 "fr": "Décider plus tard"
+},
+"Changed on another device": {
+"en": "Changed on another device",
+"fr": "Modifié sur un autre appareil"
+},
+"Your progress was changed on another device. Load the newer progress, or keep the progress on this device?": {
+"en": "Your progress was changed on another device. Load the newer progress, or keep the progress on this device?",
+"fr": "Votre progression a été modifiée sur un autre appareil. Voulez-vous charger la progression plus récente ou garder celle de cet appareil ?"
+},
+"Load newer progress": {
+"en": "Load newer progress",
+"fr": "Charger la progression plus récente"
+},
+"Keep this device": {
+"en": "Keep this device",
+"fr": "Garder cet appareil"
+},
+"The other copy is saved as a backup in About.": {
+"en": "The other copy is saved as a backup in About.",
+"fr": "L’autre copie est conservée en copie de secours dans À propos."
 },
 "No connection. Try again when you are online.": {
 "en": "No connection. Try again when you are online.",

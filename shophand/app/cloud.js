@@ -191,7 +191,14 @@
 			if (res.status === 404) return { status: 404, json: null };
 			if (res.status === 401 || res.status === 403) throw codeError('Access denied', 'denied', { status: res.status });
 			if (res.status === 429 || res.status >= 500) throw codeError('Server busy', 'server', { status: res.status });
-			if (!res.ok) throw codeError('Request failed ' + res.status, 'request', { status: res.status });
+			if (!res.ok) {
+				// A write with a precondition that no longer holds: 400 FAILED_PRECONDITION, or 409 ALREADY_EXISTS (the doc exists now).
+				return res.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) { j = null; } return j; }, function () { return null; }).then(function (j) {
+					var fsStatus = j && j.error && j.error.status ? String(j.error.status) : '';
+					var refused = fsStatus === 'FAILED_PRECONDITION' || fsStatus === 'ALREADY_EXISTS';
+					throw codeError('Request failed ' + res.status, refused ? 'precondition' : 'request', { status: res.status, fsStatus: fsStatus });
+				});
+			}
 			return res.text().then(function (t) { return { status: res.status, json: t ? JSON.parse(t) : {} }; });
 		});
 	}
@@ -201,25 +208,36 @@
 		return Date.parse(m[1] + '.' + ((m[2] || '0') + '000').slice(0, 3) + 'Z');
 	}
 
-	// Resolves null (no doc) or {state, updated (ms), name}.
+	// Resolves null (no doc) or {state, updated (ms), name, version}.
+	// version = the Firestore document updateTime, exactly as the server wrote it (nanosecond text, never rounded).
+	// Why not the "updated" field: it is rounded to ms here, and a precondition needs the exact value. updateTime is the value
+	// the server itself compares in currentDocument.updateTime. It is also set by every write, including an admin name fix.
 	// A POST with batchGet answers 200 also when the doc is missing, so a new player does not get a 404 in the console.
 	cloud.getSave = function (uid) {
 		return fs('POST', BASE + ':batchGet', { documents: [DB_NAME + '/users/' + uid] }).then(function (r) {
 			var item = Array.isArray(r.json) ? r.json[0] : null;
 			if (!item || !item.found || !item.found.fields) return null;
 			var f = item.found.fields;
-			return { state: st.fromFsValue(f.state) || {}, updated: ms(f.updated && f.updated.timestampValue), name: f.name ? st.fromFsValue(f.name) : '' };
+			return { state: st.fromFsValue(f.state) || {}, updated: ms(f.updated && f.updated.timestampValue), name: f.name ? st.fromFsValue(f.name) : '', version: String(item.found.updateTime || '') };
 		});
 	};
 	// One commit: the fields and the server time for "updated" (the rules need updated == request.time).
-	cloud.setSave = function (uid, p) {
+	// expect: {updateTime: version} (the doc must still have this version), {exists: false} (no doc yet) or null (no check).
+	// A refused write rejects with code "precondition". Resolves {updated (ms), version}.
+	cloud.setSave = function (uid, p, expect) {
 		var fields = { schema: { integerValue: '1' }, state: st.toFsValue(p.state), name: { stringValue: p.name } };
 		if (p.kind) fields.kind = { stringValue: p.kind };
 		var body = { writes: [{
 			update: { name: DB_NAME + '/users/' + uid, fields: fields },
 			updateTransforms: [{ fieldPath: 'updated', setToServerValue: 'REQUEST_TIME' }]
 		}] };
-		return fs('POST', BASE + ':commit', body).then(function (r) { return { updated: ms(r.json && r.json.commitTime) || Date.now() }; });
+		if (expect && expect.updateTime) body.writes[0].currentDocument = { updateTime: expect.updateTime };
+		else if (expect && expect.exists === false) body.writes[0].currentDocument = { exists: false };
+		return fs('POST', BASE + ':commit', body).then(function (r) {
+			if (r.status === 404 && expect) throw codeError('The save is gone', 'precondition', { status: 404 }); // Expected an existing doc.
+			var wr = r.json && r.json.writeResults && r.json.writeResults[0];
+			return { updated: ms(r.json && r.json.commitTime) || Date.now(), version: String((wr && wr.updateTime) || '') };
+		});
 	};
 	cloud.deleteSave = function (uid) { return fs('DELETE', BASE + '/users/' + encodeURIComponent(uid)).then(function () { return true; }); };
 
