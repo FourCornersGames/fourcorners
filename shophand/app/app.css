@@ -394,6 +394,9 @@ noscript .view { display: block; }
 
 /* Wide: the Collection shows the list and the detail panel side by side */
 @media (min-width: 1100px) {
+	/* The views sit in an unnamed wrapper inside main. It must take the full height, or the list pane grows to its
+	   full length, never scrolls itself, and (overscroll-behavior: contain) blocks the mouse wheel for main too. */
+	.content > div { height: 100%; }
 	.view-collection { padding: 0; height: 100%; }
 	.split { display: grid; grid-template-columns: minmax(0, 1fr) var(--detail-w); height: 100%; }
 	.list-pane { overflow-y: auto; overscroll-behavior: contain; padding: 1rem 1.5rem 1.5rem; }
