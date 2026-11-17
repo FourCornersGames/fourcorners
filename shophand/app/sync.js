@@ -14,9 +14,9 @@
 
 	var SAVE_KEY = 'shophand.save';
 	var BACKUP_KEY = 'shophand.backup';
-	var DEBOUNCE_MS = 2000, MAX_WAIT_MS = 10000, RETRY_MIN_MS = 2000, RETRY_MAX_MS = 60000;
+	var DEBOUNCE_MS = 10000, MAX_WAIT_MS = 60000, RETRY_MIN_MS = 2000, RETRY_MAX_MS = 60000;
 	var MAX_DOC_BYTES = 900000; // The Firestore limit is 1 MB per document.
-	var CHECK_MIN_MS = 15000;   // The comeback check (visible, focus, pageshow) asks the cloud at most this often.
+	var CHECK_MIN_MS = 60000;   // The comeback check (visible, pageshow, online) asks the cloud at most this often.
 	var MAX_REFUSALS = 3;       // In a row: then stop and retry later (a safety stop, never a loop).
 
 	// opts: {ps, storage {getItem,setItem,removeItem}, cloud {getSave(uid) -> null|{state,updated,name,version}, setSave(uid, p, expect) -> {updated, version}; expect is {updateTime: version} or {exists: false} or null; a refused write rejects with code 'precondition'}, now(), timers {set, clear}, askConflict(info), rng, kind() -> guest|google|email}
@@ -26,7 +26,7 @@
 		var timers = opts.timers || { set: function (fn, ms) { return setTimeout(fn, ms); }, clear: function (h) { clearTimeout(h); } };
 		var listeners = [];
 		var rec = { v: 1, state: null, dirty: false, cloudSeen: 0, cloudVer: '', uid: '', name: '', edited: 0 };
-		var status = 'local'; // local, syncing, synced, offline, error, conflict, too_big
+		var status = 'local'; // local, pending (a change waits for the cloud save), syncing, synced, offline, error, conflict, too_big
 		var uid = '';
 		var editCount = 0, debounceT = null, firstEditAt = 0, retryT = null, retryN = 0, busy = false, again = false, storageOk = true, asking = false, checking = false, refusals = 0, lastCheck = 0;
 		var self = {};
@@ -93,6 +93,7 @@
 		function schedulePush() {
 			if (!uid) { setStatus('local'); return; }
 			if (!firstEditAt) firstEditAt = now();
+			if (status === 'synced') setStatus('pending'); // "Some changes are not saved yet" while the change waits
 			if (debounceT) timers.clear(debounceT);
 			var wait = Math.min(DEBOUNCE_MS, Math.max(MAX_WAIT_MS - (now() - firstEditAt), 0));
 			debounceT = timers.set(function () { debounceT = null; firstEditAt = 0; self.flush(); }, wait);
@@ -158,7 +159,7 @@
 			return reconcile();
 		};
 
-		// The player came back (page visible, focus, pageshow) or the browser is online again: look at the cloud.
+		// The player came back (page visible, pageshow) or the browser is online again: look at the cloud.
 		// Cloud changed and no change here: take it. Cloud changed and a change here: ask. Throttled to one read per CHECK_MIN_MS.
 		// opts.force skips the wait. This never writes before the compare. A write already waiting is caught by the version check.
 		self.checkCloud = function (o) {
@@ -293,5 +294,5 @@
 		return self;
 	}
 
-	return { createSync: createSync, SAVE_KEY: SAVE_KEY, BACKUP_KEY: BACKUP_KEY, DEBOUNCE_MS: DEBOUNCE_MS, MAX_WAIT_MS: MAX_WAIT_MS };
+	return { createSync: createSync, SAVE_KEY: SAVE_KEY, BACKUP_KEY: BACKUP_KEY, DEBOUNCE_MS: DEBOUNCE_MS, MAX_WAIT_MS: MAX_WAIT_MS, CHECK_MIN_MS: CHECK_MIN_MS };
 });
