@@ -44,6 +44,16 @@ const GAMES = [
 			return doc?.fields?.enabled?.booleanValue === true;
 		},
 	},
+	{
+		id: "shophand", name: "Shop Hand", icon: "/favicon.svg", path: "/dev/shophand/",
+		apiKey: "AIzaSyDyinZnuBvonwHGqq-DsD3dV9KuQ4Uyg9k", project: "shophand-fcg",
+		refreshKey: "sh-dev-refresh", emailKey: "sh-dev-email",
+		need: "an admins/{uid} document with enabled: true",
+		async isDev(uid, tok) {
+			const doc = await fsDoc(this.project, `admins/${uid}`, tok);
+			return doc?.fields?.enabled?.booleanValue === true;
+		},
+	},
 ];
 const EMAIL_KEY = "dev-email";
 // Each game's last result this tab ({id: {ok, text}}), so the picker shows it after a reload.

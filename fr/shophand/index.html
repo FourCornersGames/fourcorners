@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop Hand — outil gratuit créé par des fans · Jeux Quatre Coins</title>
+<meta name="description" content="Shop Hand est un outil gratuit, non officiel et créé par des fans pour une île créée par un créateur dans Fortnite. Consultez les droïdes, les fusions et les renaissances sur téléphone ou ordinateur.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#121722">
+<link rel="alternate" hreflang="fr" href="https://fourcornersgames.ca/fr/shophand/">
+<link rel="alternate" hreflang="en" href="https://fourcornersgames.ca/shophand/">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/lato-semibold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/shophand/app/app.css">
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="Skip to content">Passer au contenu</a>
+<div class="app">
+<header class="top">
+	<h1 class="brand"><span class="brand-tile" aria-hidden="true">S</span>Shop Hand</h1>
+	<div class="top-actions">
+		<a class="btn" href="/shophand/" hreflang="en" lang="en" title="Changer de langue">English</a>
+		<a class="btn" id="about-btn" href="#about" data-i18n="About">À propos</a>
+	</div>
+</header>
+<nav class="tabs" id="tabs" aria-label="Menu principal" data-i18n-label="Main menu">
+	<a class="tab" data-tab="collection" href="#collection"><svg class="ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg><span data-i18n="Collection">Collection</span></a>
+	<a class="tab" data-tab="fusions" href="#fusions"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4v4a5 5 0 0 0 5 5h4a5 5 0 0 1 5 5v2M19 4v4a5 5 0 0 1-5 5h-4a5 5 0 0 0-5 5v2"/></svg><span data-i18n="Fusions">Fusions</span></a>
+	<a class="tab" data-tab="rebirth" href="#rebirth"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 3v5h-5"/></svg><span data-i18n="Rebirth">Rebirth</span></a>
+	<a class="tab" data-tab="upgrades" href="#upgrades"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11l6-6 6 6M6 19l6-6 6 6"/></svg><span data-i18n="Upgrades">Upgrades</span></a>
+	<a class="tab" data-tab="info" href="#info"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r="0.6" fill="currentColor"/></svg><span data-i18n="Info">Info</span></a>
+</nav>
+<main class="content" id="main" tabindex="-1">
+	<div id="view"></div>
+	<noscript><div class="view"><p>Shop Hand a besoin de JavaScript pour fonctionner.</p></div></noscript>
+</main>
+</div>
+<dialog class="about" id="about" aria-labelledby="about-title"></dialog>
+<script defer src="/shophand/app/vendor/firebase-app-compat.js"></script>
+<script defer src="/shophand/app/vendor/firebase-auth-compat.js"></script>
+<script defer src="/shophand/app/firebase-config.js"></script>
+<script defer src="/shophand/app/strings.js"></script>
+<script defer src="/shophand/app/domain.js"></script>
+<script defer src="/shophand/app/state.js"></script>
+<script defer src="/shophand/app/sync.js"></script>
+<script defer src="/shophand/app/ui.js"></script>
+<script defer src="/shophand/app/cloud.js"></script>
+<script defer src="/shophand/app/art.js"></script>
+<script defer src="/shophand/app/screens.js"></script>
+<script defer src="/shophand/app/app.js"></script>
+</body>
+</html>

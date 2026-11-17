@@ -143,7 +143,7 @@ async function token() {
 // Sign out of every game's panel (the gateway's sessions too) and go back to the gateway (/dev/).
 function signOutEverywhere() {
 	try {
-		for (const k of Object.keys(sessionStorage)) if (/^(ia|yt|bk)-dev-|^dev-/.test(k)) sessionStorage.removeItem(k);
+		for (const k of Object.keys(sessionStorage)) if (/^(ia|yt|bk|sh)-dev-|^dev-/.test(k)) sessionStorage.removeItem(k);
 	} catch (_) { /* Storage blocked: nothing kept anyway. */ }
 	location.href = "/dev/";
 }
