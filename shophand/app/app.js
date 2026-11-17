@@ -571,6 +571,14 @@
 		window.addEventListener('pageshow', function (e) { if (e.persisted) C.sync.checkCloud(); });
 		window.addEventListener('focus', function () { C.sync.checkCloud(); });
 		window.addEventListener('pagehide', function () { C.sync.flush(); });
+		// Two tabs of one browser share the local save. The browser tells the other tabs when one tab writes it.
+		// Save changed: take it and redraw. Online saving turned on or off, or the site data cleared: reload, so
+		// sign-in follows the same choice in every tab.
+		window.addEventListener('storage', function (e) {
+			if (e.storageArea !== window.localStorage) return;
+			if (e.key === SH.sync.SAVE_KEY) { if (e.newValue) C.sync.takeFromOtherTab(e.newValue); }
+			else if (e.key === 'shophand.consent' || e.key === null) location.reload();
+		});
 		route();
 		if (location.hash === '#about') openAbout();
 

@@ -47,16 +47,36 @@
 		}
 
 		// Read the local record. Applies it to the player state. Returns true when there was a record.
+		function parseRec(text) {
+			if (!text || text.length > st.MAX_IMPORT_BYTES * 2) return null;
+			var r = null;
+			try { r = JSON.parse(text); } catch (e) { r = null; }
+			if (!dom.isObj(r) || !dom.isObj(r.state) || st.tooDeep(r.state)) return null;
+			return { v: 1, state: r.state, dirty: r.dirty === true, cloudSeen: dom.isNum(r.cloudSeen) ? r.cloudSeen : 0, cloudVer: dom.isStr(r.cloudVer) && r.cloudVer.length <= 64 ? r.cloudVer : '',
+				uid: dom.isStr(r.uid) ? r.uid : '', name: st.validName(r.name) || '', edited: dom.isNum(r.edited) ? r.edited : 0 };
+		}
+
 		self.loadLocal = function () {
 			var text = null;
 			try { text = storage.getItem(SAVE_KEY); } catch (e) { storageOk = false; }
-			if (!text || text.length > st.MAX_IMPORT_BYTES * 2) return false;
-			var r = null;
-			try { r = JSON.parse(text); } catch (e) { r = null; }
-			if (!dom.isObj(r) || !dom.isObj(r.state) || st.tooDeep(r.state)) return false;
+			var r = parseRec(text);
+			if (!r) return false;
 			ps.applyDict(r.state);
-			rec = { v: 1, state: r.state, dirty: r.dirty === true, cloudSeen: dom.isNum(r.cloudSeen) ? r.cloudSeen : 0, cloudVer: dom.isStr(r.cloudVer) && r.cloudVer.length <= 64 ? r.cloudVer : '',
-				uid: dom.isStr(r.uid) ? r.uid : '', name: st.validName(r.name) || '', edited: dom.isNum(r.edited) ? r.edited : 0 };
+			rec = r;
+			return true;
+		};
+
+		// Another tab of this browser wrote the shared local record (the browser's "storage" event).
+		// That tab saved the newest progress, so this tab takes it at once and redraws. This keeps two tabs
+		// from overwriting each other. applyDict does not fire a change, so nothing is written back (no loop).
+		// While the "changed on another device" question is open in this tab, the record waits for the answer.
+		self.takeFromOtherTab = function (text) {
+			if (asking) return false;
+			var r = parseRec(text);
+			if (!r) return false;
+			ps.applyDict(r.state);
+			rec = r;
+			emitData();
 			return true;
 		};
 

@@ -228,5 +228,17 @@ async function run(h) {
 	eq(Object.keys(p3.cl.docs.acc).sort(), ['name', 'state', 'updated'], 'privacy: the cloud doc has the same fields as before');
 	// 10m. Online saving off: no check, no write.
 	var p10 = await pair(null); p10.B.s.forgetAccount(); eq(p10.B.s.record().cloudVer, '', 'forget: the version is cleared'); var r10 = p10.cl.reads; await p10.B.s.checkCloud({ force: true }); eq(p10.cl.reads, r10, 'forget: no check without an account');
+	// 11. Two tabs of one browser share the local record (no account). The page passes the "storage" event to takeFromOtherTab.
+	var shared = fakeStorage(), t1 = make({ storage: shared, cloud: fakeCloud() }), t2 = make({ storage: shared, cloud: fakeCloud() });
+	t1.ps.setTierOwned('cb', 'base', true);
+	var written = shared.getItem(sync.SAVE_KEY);
+	ok(t2.s.takeFromOtherTab(written), 'tabs: the other tab takes the record');
+	ok(t2.ps.toDict().owned && t2.ps.toDict().owned.cb, 'tabs: the other tab shows the change');
+	eq(shared.getItem(sync.SAVE_KEY), written, 'tabs: taking the record writes nothing back (no loop)');
+	t2.ps.setTierOwned('mouse', 'base', true);
+	var both = JSON.parse(shared.getItem(sync.SAVE_KEY)).state.owned;
+	ok(both.cb && both.mouse, 'tabs: a change in the second tab keeps the first tab\'s change');
+	ok(!t2.s.takeFromOtherTab('{not json'), 'tabs: a broken record is ignored');
+	ok(t2.ps.toDict().owned.mouse, 'tabs: a broken record changes nothing');
 }
 module.exports = { run: run };
