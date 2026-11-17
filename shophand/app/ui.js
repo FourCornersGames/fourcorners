@@ -6,6 +6,12 @@
 	var dom = SH.domain;
 	var S = window.SH_STRINGS || {};
 	var LANG = (document.documentElement.lang || 'en').slice(0, 2) === 'fr' ? 'fr' : 'en';
+	// The release version: one source of truth, <meta name="sh-version"> in the page (see README, "bump the version").
+	// Every file the page loads at run time (vendor scripts, the data) carries it as ?v=, so a new release is never
+	// served from an old copy in the browser cache or the service worker.
+	var vm = document.querySelector('meta[name="sh-version"]');
+	SH.version = vm && /^\d{8}-\d{1,3}$/.test(vm.content) ? vm.content : '';
+	SH.versioned = function (url) { return SH.version ? url + '?v=' + SH.version : url; };
 	var ui = SH.ui = { LANG: LANG, ctx: { gd: null, ps: null, sync: null, cloud: null, art: null } };
 
 	/* ---------- text ---------- */
@@ -235,21 +241,30 @@
 
 	/* ---------- toast with Undo ---------- */
 
-	var toastEl = null, toastT = null, toastUndo = null;
+	// A toast shows for TOAST_MS (3 s). The timer pauses while the pointer is over the toast or a button in it has focus,
+	// so the player can always reach Undo, and it restarts with the time that was left.
+	var TOAST_MS = ui.TOAST_MS = 3000;
+	var toastEl = null, toastT = null, toastUndo = null, toastHover = false, toastFocus = false;
+	function toastSync() { if (!toastT) return; if (toastHover || toastFocus) toastT.pause(); else toastT.resume(); }
 	ui.toast = function (text, undoFn, ms) {
 		if (!toastEl) {
 			toastEl = h('div', { class: 'toast', role: 'status', 'aria-live': 'polite', hidden: true });
+			toastEl.addEventListener('pointerenter', function () { toastHover = true; toastSync(); });
+			toastEl.addEventListener('pointerleave', function () { toastHover = false; toastSync(); });
+			toastEl.addEventListener('focusin', function () { toastFocus = true; toastSync(); });
+			toastEl.addEventListener('focusout', function () { toastFocus = false; toastSync(); });
 			document.body.appendChild(toastEl);
 		}
+		if (toastT) toastT.cancel();
+		toastHover = false; toastFocus = false;
 		clear(toastEl);
 		toastUndo = undoFn || null;
 		toastEl.appendChild(h('span', { class: 'toast-text' }, text));
 		if (undoFn) toastEl.appendChild(h('button', { class: 'btn primary', type: 'button', onclick: function () { var f = toastUndo; ui.hideToast(); if (f) f(); } }, t('Undo')));
 		toastEl.hidden = false;
-		if (toastT) clearTimeout(toastT);
-		toastT = setTimeout(ui.hideToast, ms || 5000);
+		toastT = dom.pauseTimer(ui.hideToast, ms || TOAST_MS);
 	};
-	ui.hideToast = function () { if (toastEl) toastEl.hidden = true; toastUndo = null; if (toastT) { clearTimeout(toastT); toastT = null; } };
+	ui.hideToast = function () { if (toastEl) toastEl.hidden = true; toastUndo = null; if (toastT) { toastT.cancel(); toastT = null; } toastHover = false; toastFocus = false; };
 
 	/* ---------- small widgets ---------- */
 

@@ -1,0 +1,17 @@
+{
+	"name": "Shop Hand",
+	"short_name": "Shop Hand",
+	"description": "Free, unofficial, fan-made tracker.",
+	"lang": "en",
+	"id": "/shophand/",
+	"start_url": "/shophand/",
+	"scope": "/shophand/",
+	"display": "standalone",
+	"background_color": "#0e1118",
+	"theme_color": "#121722",
+	"icons": [
+		{ "src": "/shophand/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+		{ "src": "/shophand/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+		{ "src": "/shophand/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+	]
+}

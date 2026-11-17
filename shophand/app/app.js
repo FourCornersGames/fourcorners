@@ -137,71 +137,86 @@
 
 	/* ---------- About ---------- */
 
-	function section(title) { var box = h('section', { class: 'about-sec' }, h('h3', null, title)); return box; }
+	// About has four cards, in the order players use them: Account, Settings, Backup, About Shop Hand.
+	// Short helper text only. Long explanations are in the legal pages or behind "Learn more".
+	var secN = 0;
+	function section(title, id) {
+		var hid = 'about-h' + (++secN);
+		return h('section', { class: 'about-card', id: id || null, 'aria-labelledby': hid }, h('h3', { id: hid }, title));
+	}
+	function disclosure(label, key) { return h('details', { class: 'more', 'data-key': key }, h('summary', null, label)); }
 	function buildAbout() {
 		updateAccountBtn();
+		secN = 0;
 		var dlg = els.about;
 		var top = dlg.querySelector('.about-in'), keep = top ? top.scrollTop : 0;
+		// Keep open disclosures open when the card is redrawn (a sync status change redraws it).
+		var openMore = {};
+		Array.prototype.forEach.call(dlg.querySelectorAll('details[data-key]'), function (d) { if (d.open) openMore[d.getAttribute('data-key')] = true; });
 		var close = h('button', { class: 'btn', type: 'button', onclick: closeAbout, 'aria-label': t('Close') }, t('Close'));
+		var inner = h('div', { class: 'about-in' }, h('header', null, h('h2', { id: 'about-title' }, t('About')), close));
+		if (C.ps) inner.appendChild(accountSection());
+		inner.appendChild(settingsSection());
+		if (C.ps) inner.appendChild(backupSection());
+		inner.appendChild(aboutSection());
+		clear(dlg).appendChild(inner);
+		Array.prototype.forEach.call(inner.querySelectorAll('details[data-key]'), function (d) { if (openMore[d.getAttribute('data-key')]) d.open = true; });
+		inner.scrollTop = keep;
+	}
+
+	function aboutSection() {
+		var s = section(t('About Shop Hand'));
 		var meta = [];
 		if (D && D.data_version) meta.push(t('Data version: %s (%s)', D.data_version, D.updated || t('unknown')));
-		var inner = h('div', { class: 'about-in' }, h('header', null, h('h2', { id: 'about-title' }, t('About')), close));
-
-		var sl = section(t('Language'));
-		var other = LANG === 'en' ? { href: '/fr/shophand/', lang: 'fr', name: 'Français' } : { href: '/shophand/', lang: 'en', name: 'English' };
-		var cur = LANG === 'en' ? 'English' : 'Français';
-		sl.appendChild(h('div', { class: 'about-lang' }, h('span', { class: 'btn on', 'aria-current': 'true', lang: LANG }, cur),
-			h('a', { class: 'btn', href: other.href, hreflang: other.lang, lang: other.lang }, other.name)));
-		inner.appendChild(sl);
-
-		var s1 = section(t('Free and unofficial'));
-		s1.appendChild(h('p', null, 'Shop Hand · ' + t('Four Corners Games')));
-		s1.appendChild(h('p', { class: 'test-line' }, t('Test version')));
-		s1.appendChild(h('p', { class: 'dim' }, t('A two-person indie studio from Quebec.')));
-		s1.appendChild(h('p', null, t('Contact: %s', ''), h('a', { href: 'mailto:support@fourcornersgames.ca' }, 'support@fourcornersgames.ca')));
-		inner.appendChild(s1);
-
-		var s2 = section(t('Disclaimer'));
-		s2.appendChild(h('p', { class: 'disclaimer' }, t(DISCLAIMER)));
-		s2.appendChild(h('p', { class: 'dim' }, t(NO_LOGOS)));
-		s2.appendChild(h('p', { class: 'dim' }, t('This app is free. It has no ads and no purchases. The studio earns no money from it.')));
-		inner.appendChild(s2);
-
-		if (C.ps) {
-			inner.appendChild(accountSection());
-			var s3 = section(t('Settings'));
-			var hn = h('input', { type: 'checkbox', id: 'hide-names', onchange: function () { C.ps.setSetting('hide_unowned_names', this.checked); } });
-			hn.checked = !!C.ps.getSetting('hide_unowned_names');
-			s3.appendChild(h('label', { class: 'check-row', for: 'hide-names' }, hn, t('Hide names of droids I do not own')));
-			inner.appendChild(s3);
-			inner.appendChild(backupSection());
-		}
-
-		var s5 = section(t('Privacy'));
-		s5.appendChild(h('p', null, t("Your progress stays on this device. Only if you turn on online saving, it is also saved on Google's servers (Firebase). The studio does not see your email address.")));
-		inner.appendChild(s5);
-
-		if (meta.length) inner.appendChild(h('p', { class: 'dim small', style: 'margin-top:0.75rem' }, meta.join(' ')));
-		inner.appendChild(h('div', { class: 'about-links' },
+		s.appendChild(h('p', null, h('strong', null, 'Shop Hand'), ' · ' + t('Four Corners Games') + ' ', h('span', { class: 'test-line' }, t('Test version'))));
+		s.appendChild(h('p', { class: 'dim' }, t('A two-person indie studio from Quebec.')));
+		s.appendChild(h('p', null, t('Contact: %s', ''), h('a', { href: 'mailto:support@fourcornersgames.ca' }, 'support@fourcornersgames.ca')));
+		s.appendChild(h('p', { class: 'disclaimer' }, t(DISCLAIMER)));
+		s.appendChild(h('p', { class: 'dim small' }, t(NO_LOGOS) + ' ' + t('This app is free. It has no ads and no purchases. The studio earns no money from it.')));
+		if (meta.length) s.appendChild(h('p', { class: 'dim small' }, meta.join(' ')));
+		s.appendChild(h('div', { class: 'about-links' },
 			h('a', { class: 'btn', href: LEGAL.privacy }, t('Privacy Policy')), h('a', { class: 'btn', href: LEGAL.terms }, t('Terms of Use')),
 			h('a', { class: 'btn', href: LEGAL.del }, t('Delete your account')),
 			h('a', { class: 'btn', href: LEGAL.home }, t('Four Corners Games'))));
-		clear(dlg).appendChild(inner);
-		inner.scrollTop = keep;
+		return s;
+	}
+
+	function settingsSection() {
+		var s = section(t('Settings'));
+		var other = LANG === 'en' ? { href: '/fr/shophand/', lang: 'fr', name: 'Français' } : { href: '/shophand/', lang: 'en', name: 'English' };
+		var cur = LANG === 'en' ? 'English' : 'Français';
+		s.appendChild(h('div', { class: 'set-row' }, h('span', { class: 'set-label' }, t('Language')),
+			h('span', { class: 'about-lang' }, h('span', { class: 'btn on', 'aria-current': 'true', lang: LANG }, cur),
+				h('a', { class: 'btn', href: other.href, hreflang: other.lang, lang: other.lang }, other.name))));
+		if (C.ps) {
+			var hn = h('input', { type: 'checkbox', id: 'hide-names', onchange: function () { C.ps.setSetting('hide_unowned_names', this.checked); } });
+			hn.checked = !!C.ps.getSetting('hide_unowned_names');
+			s.appendChild(h('label', { class: 'check-row', for: 'hide-names' }, hn, t('Hide names of droids I do not own')));
+		}
+		var inst = SH.pwa ? SH.pwa.installState() : '';
+		if (inst === 'prompt') {
+			s.appendChild(h('div', { class: 'set-row' }, h('span', { class: 'set-label' }, t('Install Shop Hand to open it full screen and use it offline.')),
+				h('button', { class: 'btn primary', type: 'button', onclick: function () { SH.pwa.install(); } }, t('Install app'))));
+		} else if (inst === 'ios') {
+			s.appendChild(h('p', { class: 'dim' }, t('Install app') + ': ' + t('Share → Add to Home Screen')));
+		}
+		return s;
 	}
 
 	function accountSection() {
 		var cloud = SH.cloud, sync = C.sync;
 		var on = C.consent.has();
-		var box = section(t('Online saving'));
-		box.id = 'online-saving';
+		var box = section(t('Account'), 'online-saving');
 		var status = sync.getStatus();
 		box.appendChild(h('p', { class: 'sync-line', 'data-sync': on ? status : 'local' },
 			h('strong', null, on ? t('Online saving on') : t('On this device only')), on ? ' · ' + syncText(status) : ''));
 		if (!sync.storageOk()) box.appendChild(h('p', { class: 'warn' }, t('This browser does not let the page save on this device. Save a backup file to keep your data.')));
+		var learn = disclosure(t('Learn more'), 'learn');
+		learn.appendChild(h('p', { class: 'dim' }, t("Your progress stays on this device. Only if you turn on online saving, it is also saved on Google's servers (Firebase). The studio does not see your email address.")));
 		if (!on) {
-			box.appendChild(h('p', { class: 'dim' }, t('Your progress stays on this device. Nothing is sent to Google or to any other server. Turn on online saving to use the same progress on other devices.')));
+			box.appendChild(h('p', { class: 'dim' }, t('Your progress stays on this device until you turn on online saving.')));
 			box.appendChild(h('div', { class: 'acct-actions' }, h('button', { class: 'btn primary', type: 'button', onclick: openConsentSheet }, t('Turn on online saving'))));
+			box.appendChild(learn);
 			return box;
 		}
 		if (status === 'conflict') box.appendChild(h('button', { class: 'btn primary', type: 'button', onclick: function () { sync.retryNow(true); } }, t('Choose which data to keep')));
@@ -209,34 +224,29 @@
 		var user = cloud.user();
 		if (!user) { box.appendChild(h('p', { class: 'dim' }, t('Starting a guest account…'))); box.appendChild(turnOffButton()); return box; }
 
+		var kind = cloud.kind(), provs = cloud.providers();
+		var kindName = kind === 'google' ? t('Google account') : kind === 'email' ? t('Email account') : t('Guest account');
 		var name = sync.name();
-		box.appendChild(h('div', { class: 'acct-row' }, h('span', { class: 'dim' }, t('Your name') + ': '), h('strong', null, name || '…'),
-			h('button', { class: 'btn', type: 'button', onclick: changeName }, t('Change name'))));
-		box.appendChild(h('p', { class: 'dim small' }, t('This name is not your real name. The studio never stores your email address or your Google name.')));
-		box.appendChild(h('div', { class: 'acct-row' }, h('span', { class: 'dim' }, t('Your user ID') + ': '), h('code', { class: 'uid' }, user.uid),
-			h('button', { class: 'btn', type: 'button', onclick: copyUserId }, t('Copy'))));
-		box.appendChild(h('p', { class: 'dim small' }, t('Give this ID if you write to us about your data.')));
-
-		var provs = cloud.providers();
-		if (user.isAnonymous) {
-			box.appendChild(h('p', null, t('You are using a guest account. Link a sign-in to keep your data if you clear this browser or change device.')));
-		} else {
-			box.appendChild(h('p', null, provs.length ? t('Signed in with: %s', provs.map(function (p) { return p === 'google' ? 'Google' : t('email link'); }).join(', ')) : t('Signed in.')));
-		}
+		box.appendChild(h('div', { class: 'acct-row' }, h('span', { class: 'dim' }, t('Your name') + ': '), h('strong', { class: 'acct-name' }, name || '…'),
+			h('button', { class: 'btn', type: 'button', onclick: changeName }, t('Change'))));
+		box.appendChild(h('p', { class: 'dim' }, h('span', { class: 'test-line kind' }, kindName), ' ',
+			user.isAnonymous ? t('Link a sign-in to keep your data if you change device.') : ''));
 		var acts = h('div', { class: 'acct-actions' });
-		if (provs.indexOf('google') === -1) acts.appendChild(h('button', { class: 'btn', type: 'button', onclick: linkGoogle }, t('Link Google')));
-		if (provs.indexOf('email') === -1) acts.appendChild(h('button', { class: 'btn', type: 'button', onclick: linkEmail }, t('Link email (link sent by email)')));
+		var first = user.isAnonymous ? 'btn primary' : 'btn';
+		if (provs.indexOf('google') === -1) { acts.appendChild(h('button', { class: first, type: 'button', onclick: linkGoogle }, t('Link Google'))); first = 'btn'; }
+		if (provs.indexOf('email') === -1) acts.appendChild(h('button', { class: first, type: 'button', onclick: linkEmail }, t('Link email')));
+		acts.appendChild(turnOffButton(true));
 		box.appendChild(acts);
-		if (user.isAnonymous) box.appendChild(h('p', { class: 'dim small' }, t('You can also sign in to an account you already have: use Link Google or Link email. You will choose which data to keep.')));
-		box.appendChild(h('div', { class: 'acct-actions' }, turnOffButton(true),
-			h('button', { class: 'btn danger', type: 'button', onclick: deleteAccount }, t('Delete my account and data'))));
 
-		var bk = sync.getBackup();
-		if (bk) {
-			box.appendChild(h('h4', null, t('Previous data on this device')));
-			box.appendChild(h('p', { class: 'dim small' }, t('A backup of data that was replaced: %d droids owned, rebirth %d, saved %s.', bk.summary.droids, bk.summary.rebirth, new Date(bk.saved).toLocaleString(LANG))));
-			box.appendChild(h('button', { class: 'btn', type: 'button', onclick: restoreBackup }, t('Restore the previous data')));
-		}
+		var more = disclosure(t('More account options'), 'more');
+		more.appendChild(h('div', { class: 'acct-row' }, h('span', { class: 'dim' }, t('Your user ID') + ': '), h('code', { class: 'uid' }, user.uid),
+			h('button', { class: 'btn', type: 'button', onclick: copyUserId }, t('Copy'))));
+		more.appendChild(h('p', { class: 'dim small' }, t('Give this ID if you write to us about your data.')));
+		if (user.isAnonymous) more.appendChild(h('p', { class: 'dim small' }, t('You can also sign in to an account you already have: use Link Google or Link email. You will choose which data to keep.')));
+		more.appendChild(h('div', { class: 'acct-actions' }, h('button', { class: 'btn danger', type: 'button', onclick: deleteAccount }, t('Delete my account and data'))));
+		box.appendChild(more);
+		learn.appendChild(h('p', { class: 'dim' }, t('This name is not your real name. The studio never stores your email address or your Google name.')));
+		box.appendChild(learn);
 		return box;
 	}
 	function turnOffButton(bare) {
@@ -386,17 +396,19 @@
 	}
 
 	function backupSection() {
-		var s = section(t('Back up your data'));
-		var info = h('p', { class: 'dim', role: 'status' });
-		s.appendChild(h('p', { class: 'dim' }, t('Save your data as a file. The file also works in the Android app.')));
-		s.appendChild(h('div', { class: 'acct-actions' },
-			h('button', { class: 'btn', type: 'button', onclick: function () { exportFile(info); } }, t('Save backup to a file')),
-			h('button', { class: 'btn', type: 'button', onclick: function () { exportClipboard(info); } }, t('Copy my data to clipboard'))));
+		var s = section(t('Backup'));
+		var info = h('p', { class: 'dim small', role: 'status' });
+		s.appendChild(h('p', { class: 'dim' }, t('Save your data to a file, or load a file. The file also works in the Android app.')));
 		var fileIn = h('input', { type: 'file', accept: '.json,application/json', class: 'sr-only', id: 'import-file', tabindex: '-1', onchange: function () { loadFile(this, info); } });
-		s.appendChild(h('h4', null, t('Restore your data')));
-		s.appendChild(h('p', { class: 'dim' }, t('Load a backup file. This replaces the data on this device.')));
+		var row = h('div', { class: 'btn-row' },
+			h('button', { class: 'btn', type: 'button', onclick: function () { exportFile(info); } }, t('Save to file')),
+			h('button', { class: 'btn', type: 'button', onclick: function () { exportClipboard(info); } }, t('Copy data')),
+			h('button', { class: 'btn', type: 'button', onclick: function () { fileIn.click(); } }, t('Load from file')));
+		var bk = C.sync.getBackup();
+		if (bk) row.appendChild(h('button', { class: 'btn', type: 'button', onclick: restoreBackup }, t('Restore the previous data')));
 		s.appendChild(fileIn);
-		s.appendChild(h('button', { class: 'btn', type: 'button', onclick: function () { fileIn.click(); } }, t('Load backup from a file')));
+		s.appendChild(row);
+		if (bk) s.appendChild(h('p', { class: 'dim small' }, t('A backup of data that was replaced: %d droids owned, rebirth %d, saved %s.', bk.summary.droids, bk.summary.rebirth, new Date(bk.saved).toLocaleString(LANG))));
 		s.appendChild(info);
 		return s;
 	}
@@ -596,6 +608,7 @@
 		els.aboutBtn = document.getElementById('about-btn');
 		els.acctBtn = document.getElementById('acct-btn');
 		applyStatic();
+		if (SH.pwa) SH.pwa.onChange(function () { if (els.about.open) buildAbout(); });
 
 		els.aboutBtn.addEventListener('click', function (e) { e.preventDefault(); aboutPushed = true; location.hash = '#about'; });
 		els.acctBtn.addEventListener('click', function () { scrollToAccount = true; if (location.hash === '#about') { openAbout(); return; } aboutPushed = true; location.hash = '#about'; });
@@ -606,7 +619,7 @@
 		wideMq.addEventListener('change', function () { if (views.collection) views.collection.renderDetail(); });
 		window.addEventListener('hashchange', route);
 
-		fetch(DATA_URL, { credentials: 'same-origin' })
+		fetch(SH.versioned(DATA_URL), { credentials: 'same-origin' })
 			.then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
 			.then(function (j) { if (!dom.isUsableData(j)) throw new Error('bad data'); D = j; })
 			.catch(function (err) { console.warn('Shop Hand data not loaded:', err); D = null; })

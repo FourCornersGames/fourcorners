@@ -1863,5 +1863,81 @@ window.SH_STRINGS = {
 "Marked required droid %d of rebirth %d as %s": {
 "en": "Marked required droid %d of rebirth %d as %s",
 "fr": "Droïde requis %d de la renaissance %d marqué comme %s"
+},
+"Account": {
+"en": "Account",
+"fr": "Compte"
+},
+"Backup": {
+"en": "Backup",
+"fr": "Copie de secours"
+},
+"About Shop Hand": {
+"en": "About Shop Hand",
+"fr": "À propos de Shop Hand"
+},
+"More account options": {
+"en": "More account options",
+"fr": "Plus d’options du compte"
+},
+"Learn more": {
+"en": "Learn more",
+"fr": "En savoir plus"
+},
+"Change": {
+"en": "Change",
+"fr": "Modifier"
+},
+"Link email": {
+"en": "Link email",
+"fr": "Lier un courriel"
+},
+"Your progress stays on this device until you turn on online saving.": {
+"en": "Your progress stays on this device until you turn on online saving.",
+"fr": "Votre progression reste sur cet appareil tant que vous n’activez pas la sauvegarde en ligne."
+},
+"Link a sign-in to keep your data if you change device.": {
+"en": "Link a sign-in to keep your data if you change device.",
+"fr": "Liez une connexion pour garder vos données si vous changez d’appareil."
+},
+"Save your data to a file, or load a file. The file also works in the Android app.": {
+"en": "Save your data to a file, or load a file. The file also works in the Android app.",
+"fr": "Enregistrez vos données dans un fichier, ou chargez un fichier. Le fichier fonctionne aussi dans l’application Android."
+},
+"Save to file": {
+"en": "Save to file",
+"fr": "Enregistrer dans un fichier"
+},
+"Copy data": {
+"en": "Copy data",
+"fr": "Copier les données"
+},
+"Load from file": {
+"en": "Load from file",
+"fr": "Charger un fichier"
+},
+"Install app": {
+"en": "Install app",
+"fr": "Installer l’application"
+},
+"Install Shop Hand to open it full screen and use it offline.": {
+"en": "Install Shop Hand to open it full screen and use it offline.",
+"fr": "Installez Shop Hand pour l’ouvrir en plein écran et l’utiliser hors ligne."
+},
+"Share → Add to Home Screen": {
+"en": "Share → Add to Home Screen",
+"fr": "Partager → Sur l’écran d’accueil"
+},
+"A new version is ready.": {
+"en": "A new version is ready.",
+"fr": "Une nouvelle version est prête."
+},
+"Reload": {
+"en": "Reload",
+"fr": "Recharger"
+},
+"Later": {
+"en": "Later",
+"fr": "Plus tard"
 }
 };

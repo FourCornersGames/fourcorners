@@ -21,7 +21,7 @@
 
 	// The Firebase sign-in files are loaded only after the player turns on online saving (see consent.js).
 	// Before that, the page makes no request to Firebase or Google.
-	var VENDOR = ['/shophand/app/vendor/firebase-app-compat.js', '/shophand/app/vendor/firebase-auth-compat.js'];
+	var VENDOR = ['/shophand/app/vendor/firebase-app-compat.js', '/shophand/app/vendor/firebase-auth-compat.js'].map(function (u) { return SH.versioned ? SH.versioned(u) : u; });   // ?v=release, see ui.js
 	var loading = null;
 	function loadScript(src) {
 		return new Promise(function (resolve, reject) {
@@ -215,11 +215,17 @@
 	// A POST with batchGet answers 200 also when the doc is missing, so a new player does not get a 404 in the console.
 	cloud.getSave = function (uid) {
 		return fs('POST', BASE + ':batchGet', { documents: [DB_NAME + '/users/' + uid] }).then(function (r) {
-			var item = Array.isArray(r.json) ? r.json[0] : null;
-			if (!item || !item.found || !item.found.fields) return null;
-			var f = item.found.fields;
-			return { state: st.fromFsValue(f.state) || {}, updated: ms(f.updated && f.updated.timestampValue), name: f.name ? st.fromFsValue(f.name) : '', version: String(item.found.updateTime || '') };
+			var found = st.firstFound(r.json);
+			if (!found) return null;
+			var f = found.fields;
+			return { state: st.fromFsValue(f.state) || {}, updated: ms(f.updated && f.updated.timestampValue), name: f.name ? st.fromFsValue(f.name) : '', version: String(found.updateTime || '') };
 		});
+	};
+	// Is this account in art_readers (trusted)? The rules let a player read only their own record there.
+	// :batchGet answers 200 with "missing" when it is not there, so a "no" is not a 404 and not a console error.
+	// Resolves true or false. Rejects (offline, server) so the caller keeps what it has.
+	cloud.isTrusted = function (uid) {
+		return fs('POST', BASE + ':batchGet', { documents: [DB_NAME + '/art_readers/' + uid] }).then(function (r) { return !!st.firstFound(r.json); });
 	};
 	// One commit: the fields and the server time for "updated" (the rules need updated == request.time).
 	// expect: {updateTime: version} (the doc must still have this version), {exists: false} (no doc yet) or null (no check).
