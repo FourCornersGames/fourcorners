@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Bolt Bucket Dev Panel</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/dev/idleadventure/app.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<!--
+	Bolt Bucket dev panel (Firebase project shophand-fcg). Not linked from anywhere; the Firestore
+	rules (isAdmin() in the app repo's firebase/firestore.rules: an admins/{uid} document with
+	enabled: true) are what protect the data, not this URL. See README.md "Dev panel (/dev/boltbucket/)".
+	Privacy rule: the panel shows only the player's chosen name, uid, account kind and save data.
+	It never reads emails, real names or photos.
+-->
+<header class="top">
+	<div class="bar">
+		<a class="btn ghost small" href="/dev/" title="Pick another game">All Games</a>
+		<a class="brand" href="#/players"><img src="/favicon.svg" alt="" width="28" height="28">Bolt Bucket <span>Dev</span></a>
+		<div class="who" id="who" hidden><span id="who-name"></span><button class="link" id="sign-out" type="button">Sign out</button></div>
+	</div>
+</header>
+
+<main id="main">
+	<section id="signin" class="signin" hidden>
+		<h1>Dev sign-in</h1>
+		<p class="muted">Sign in once for every game on the <a href="/dev/">Four Corners Dev</a> page.</p>
+		<p class="error" id="signin-error" role="alert"></p>
+		<a class="btn" href="/dev/#boltbucket">Go to Dev Sign-In</a>
+	</section>
+	<div id="view"></div>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

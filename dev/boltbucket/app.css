@@ -1,4 +1,4 @@
-/* Shop Hand dev panel: small additions on top of the shared Pocket Quest panel stylesheet. */
+/* Bolt Bucket dev panel: small additions on top of the shared Pocket Quest panel stylesheet. */
 .toolbar input[type="search"] { width: min(100%, 260px); }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; }
 .kv dt { color: var(--muted); font-weight: 700; }
