@@ -7,6 +7,8 @@
  * Take down. A take-down deletes profiles/{code} and profile_owners/{code} and writes profile_blocks/{uid}
  * in one commit; the block stops the player's app from publishing the page again (firestore.rules).
  * Lift removes the block.
+ * Settings (Jay, 2026-11-19): the switch config/public.art_public turns the droid portraits off for everyone
+ * except Trusted players.
  *
  * PRIVACY RULE (owner decision): the panel shows only the player's chosen name, the uid, the
  * account kind and the save data. It never reads Auth user records, emails, real names or photos
@@ -282,6 +284,19 @@ async function takeDownProfile(code, uid) {
 	await fs("POST", `${FS}:commit`, { writes }, "take this profile down");
 }
 
+// The studio switch (Jay, 2026-11-19): config/public.art_public. false = portraits only for Trusted players.
+async function getArtPublic() {
+	const doc = await getDoc("config/public", "read the portrait switch");
+	const f = decodeFields(doc?.fields);
+	return { on: f.art_public !== false, by: f.by || "", at: f.at || "" };
+}
+async function setArtPublic(on) {
+	await fs("POST", `${FS}:commit`, { writes: [{
+		update: { name: `${DB_NAME}/config/public`, fields: { art_public: { booleanValue: !!on }, by: { stringValue: auth.uid } } },
+		updateTransforms: [{ fieldPath: "at", setToServerValue: "REQUEST_TIME" }],
+	}] }, "change the portrait switch");
+}
+
 async function liftBlock(uid) {
 	await fs("DELETE", `profile_blocks/${encodeURIComponent(uid)}`, undefined, "lift the take-down");
 }
@@ -363,6 +378,7 @@ function route() {
 	window.scrollTo(0, 0);
 	if (name === "player" && arg) showPlayer(decodeURIComponent(arg));
 	else if (name === "profiles") showProfiles();
+	else if (name === "settings") showSettings();
 	else showPlayers();
 	for (const n of document.querySelectorAll(".nav-tabs a")) n.classList.toggle("on", n.getAttribute("href") === `#/${name === "player" ? "players" : name}`);
 }
@@ -427,6 +443,41 @@ async function showPlayers(reload = false) {
 				drawRows();
 			} catch (err) { toast(err.message, true); }
 			e.target.disabled = false;
+		});
+	} catch (e) { failed(e); }
+}
+
+// --- Settings ------------------------------------------------------------------
+
+async function showSettings() {
+	view.innerHTML = `<p class="loading">Loading settings…</p>`;
+	try {
+		let s = await getArtPublic();
+		view.innerHTML = `
+			<div class="toolbar"><h1 style="margin:0">Settings</h1></div>
+			<div class="card">
+				<h2>Droid portraits</h2>
+				<div class="switch-row">
+					<input type="checkbox" role="switch" id="art-public">
+					<label for="art-public">Show the droid portraits to everyone</label>
+				</div>
+				<p class="muted small" id="art-info"></p>
+				<p class="muted small">Off: only Trusted players (see each player page) see the portraits; everyone else sees letter tiles, also on public profiles. Players' pages pick up a change within 30 minutes, or when the app comes back to the front. The image files stay on the site: to remove them for real, delete them and deploy.</p>
+				<p class="error" id="art-error" role="alert"></p>
+			</div>`;
+		const box = $("#art-public");
+		const show = () => {
+			box.checked = s.on;
+			$("#art-info").textContent = (s.on ? "On: everyone sees the portraits." : "Off: only Trusted players see the portraits.") + (s.at ? ` Last changed ${localTime(s.at)}.` : " Never changed (on by default).");
+		};
+		show();
+		box.addEventListener("change", async () => {
+			const on = box.checked;
+			if (!on && !confirm("Turn the droid portraits off for everyone except Trusted players?")) { box.checked = true; return; }
+			box.disabled = true; $("#art-error").textContent = "";
+			try { await setArtPublic(on); s = await getArtPublic(); toast(on ? "Portraits on for everyone." : "Portraits off, except Trusted players."); }
+			catch (e) { $("#art-error").textContent = e.message; }
+			box.disabled = false; show();
 		});
 	} catch (e) { failed(e); }
 }
@@ -624,7 +675,7 @@ async function showPlayer(uid) {
 		$("#trusted").addEventListener("change", async (e) => {
 			const box = e.target, on = box.checked, err = $("#trusted-error");
 			err.textContent = "";
-			if (on && !confirm("Trusted players can see the droid images. Only trust people you know.")) { box.checked = false; return; }
+			if (on && !confirm("Trusted players see the droid portraits even when they are turned off for everyone (Settings). Only trust people you know.")) { box.checked = false; return; }
 			box.disabled = true;
 			try {
 				await setTrusted(uid, on);
