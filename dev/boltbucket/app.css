@@ -10,3 +10,9 @@
 .switch-row label { font-weight: 700; cursor: pointer; }
 .more { display: flex; justify-content: center; margin-top: 14px; }
 pre.json { white-space: pre-wrap; word-break: break-word; }
+.nav-tabs { display: flex; gap: 4px; margin-left: 12px; }
+.nav-tabs a { padding: 6px 10px; border-radius: 8px; color: var(--muted); text-decoration: none; font-weight: 700; }
+.nav-tabs a.on { background: rgba(255,255,255,0.08); color: inherit; }
+.link-cell { white-space: nowrap; }
+.link-cell code { margin-right: 6px; }
+.btn.danger { background: #b3261e; border-color: #b3261e; color: #fff; }

@@ -3,6 +3,12 @@
  * The players (every users/{uid} document, newest save first), a player page (name, uid, kind,
  * a short summary, the whole save as JSON, a backup download, a rename) and the Trusted switch
  * (art_readers/{uid}: Trusted players can see the droid images).
+ * Public profiles (Jay, 2026-11-19): every live profile with its owner, a Copy link and Open button, and
+ * Take down. A take-down deletes profiles/{code} and profile_owners/{code} and writes profile_blocks/{uid}
+ * in one commit; the block stops the player's app from publishing the page again (firestore.rules).
+ * Lift removes the block.
+ * Settings (Jay, 2026-11-19): the switch config/public.art_public turns the droid portraits off for everyone
+ * except Trusted players.
  *
  * PRIVACY RULE (owner decision): the panel shows only the player's chosen name, the uid, the
  * account kind and the save data. It never reads Auth user records, emails, real names or photos
@@ -132,7 +138,7 @@ function summarize(state) {
 	return {
 		droids, variants, inProgress,
 		rebirth: num(state.rebirth_number, 0),
-		superRebirth: Math.max(num(state.rebirth_cycle, 1) - 1, 0), // The page shows "Super rebirth count" as path - 1.
+		path: Math.max(num(state.rebirth_cycle, 1), 1), // The page shows the path, 1 to 6 (2026-11-19).
 	};
 }
 
@@ -226,6 +232,80 @@ async function queryPlayers(offset) {
 	return { rows: docs, more: docs.length === PAGE_SIZE };
 }
 
+// Every document of a small collection: [{id, f (decoded fields)}].
+async function allDocs(coll, what) {
+	const rows = await fs("POST", `${FS}:runQuery`, { structuredQuery: { from: [{ collectionId: coll }], limit: 5000 } }, what);
+	return rows.filter((r) => r.document).map((r) => ({ id: r.document.name.split("/").pop(), f: decodeFields(r.document.fields) }));
+}
+
+// Several documents in one request: {id: decoded fields} (a missing one is left out). mask: field names to read.
+async function batchGet(coll, ids, mask, what) {
+	const out = {};
+	for (let i = 0; i < ids.length; i += 100) {
+		const part = ids.slice(i, i + 100);
+		const body = { documents: part.map((id) => `${DB_NAME}/${coll}/${id}`) };
+		if (mask) body.mask = { fieldPaths: mask };
+		const rows = await fs("POST", `${FS}:batchGet`, body, what);
+		for (const r of rows) if (r.found) out[r.found.name.split("/").pop()] = decodeFields(r.found.fields);
+	}
+	return out;
+}
+
+const PROFILE_URL = "https://boltbucket.fourcornersgames.ca/p/";
+
+// The live profiles: [{code, uid, name (the page's name, if shared), player (the save's name), updated (ms)}],
+// newest first, and the blocks: {uid: {by, at, code}}. Since 2026-11-18 the owner is in profile_owners/{code};
+// an older page still holds the uid itself.
+async function loadProfiles() {
+	const [pages, owners, blocks] = await Promise.all([
+		allDocs("profiles", "read the public profiles"),
+		allDocs("profile_owners", "read the profile owners"),
+		allDocs("profile_blocks", "read the profile take-downs"),
+	]);
+	const ownerOf = {};
+	for (const o of owners) ownerOf[o.id] = typeof o.f.uid === "string" ? o.f.uid : "";
+	const rows = pages.map((p) => ({ code: p.id, uid: ownerOf[p.id] || (typeof p.f.uid === "string" ? p.f.uid : ""), name: typeof p.f.name === "string" ? p.f.name : "", updated: ms(p.f.updated), player: "" }));
+	const blockMap = {};
+	for (const b of blocks) blockMap[b.id] = b.f;
+	const uids = [...new Set(rows.map((r) => r.uid).concat(Object.keys(blockMap)).filter(Boolean))];
+	const names = uids.length ? await batchGet("users", uids, ["name"], "read the player names") : {};
+	for (const r of rows) r.player = names[r.uid]?.name || "";
+	rows.sort((x, y) => y.updated - x.updated);
+	return { rows, blocks: blockMap, names };
+}
+
+// Take a profile down: the page and its owner record go, and the account is blocked from publishing again.
+async function takeDownProfile(code, uid) {
+	const writes = [{ delete: `${DB_NAME}/profiles/${code}` }, { delete: `${DB_NAME}/profile_owners/${code}` }];
+	if (uid) writes.push({
+		update: { name: `${DB_NAME}/profile_blocks/${uid}`, fields: { by: { stringValue: auth.uid }, code: { stringValue: code } } },
+		updateTransforms: [{ fieldPath: "at", setToServerValue: "REQUEST_TIME" }],
+	});
+	await fs("POST", `${FS}:commit`, { writes }, "take this profile down");
+}
+
+// The studio switch (Jay, 2026-11-19): config/public.art_public. false = portraits only for Trusted players.
+async function getArtPublic() {
+	const doc = await getDoc("config/public", "read the portrait switch");
+	const f = decodeFields(doc?.fields);
+	return { on: f.art_public !== false, by: f.by || "", at: f.at || "" };
+}
+async function setArtPublic(on) {
+	await fs("POST", `${FS}:commit`, { writes: [{
+		update: { name: `${DB_NAME}/config/public`, fields: { art_public: { booleanValue: !!on }, by: { stringValue: auth.uid } } },
+		updateTransforms: [{ fieldPath: "at", setToServerValue: "REQUEST_TIME" }],
+	}] }, "change the portrait switch");
+}
+
+async function liftBlock(uid) {
+	await fs("DELETE", `profile_blocks/${encodeURIComponent(uid)}`, undefined, "lift the take-down");
+}
+
+async function copyText(text) {
+	try { await navigator.clipboard.writeText(text); toast("Link copied."); }
+	catch (_) { prompt("Copy the link:", text); }
+}
+
 // The uids in art_readers (Trusted): {uid: {by, at}}.
 async function trustedMap() {
 	const rows = await fs("POST", `${FS}:runQuery`, { structuredQuery: { from: [{ collectionId: "art_readers" }], limit: 5000 } }, "read the Trusted list");
@@ -297,7 +377,10 @@ function route() {
 	const [, name = "players", arg = ""] = location.hash.split("/");
 	window.scrollTo(0, 0);
 	if (name === "player" && arg) showPlayer(decodeURIComponent(arg));
+	else if (name === "profiles") showProfiles();
+	else if (name === "settings") showSettings();
 	else showPlayers();
+	for (const n of document.querySelectorAll(".nav-tabs a")) n.classList.toggle("on", n.getAttribute("href") === `#/${name === "player" ? "players" : name}`);
 }
 
 window.addEventListener("hashchange", route);
@@ -364,6 +447,98 @@ async function showPlayers(reload = false) {
 	} catch (e) { failed(e); }
 }
 
+// --- Settings ------------------------------------------------------------------
+
+async function showSettings() {
+	view.innerHTML = `<p class="loading">Loading settings…</p>`;
+	try {
+		let s = await getArtPublic();
+		view.innerHTML = `
+			<div class="toolbar"><h1 style="margin:0">Settings</h1></div>
+			<div class="card">
+				<h2>Droid portraits</h2>
+				<div class="switch-row">
+					<input type="checkbox" role="switch" id="art-public">
+					<label for="art-public">Show the droid portraits to everyone</label>
+				</div>
+				<p class="muted small" id="art-info"></p>
+				<p class="muted small">Off: only Trusted players (see each player page) see the portraits; everyone else sees letter tiles, also on public profiles. Players' pages pick up a change within 30 minutes, or when the app comes back to the front. The image files stay on the site: to remove them for real, delete them and deploy.</p>
+				<p class="error" id="art-error" role="alert"></p>
+			</div>`;
+		const box = $("#art-public");
+		const show = () => {
+			box.checked = s.on;
+			$("#art-info").textContent = (s.on ? "On: everyone sees the portraits." : "Off: only Trusted players see the portraits.") + (s.at ? ` Last changed ${localTime(s.at)}.` : " Never changed (on by default).");
+		};
+		show();
+		box.addEventListener("change", async () => {
+			const on = box.checked;
+			if (!on && !confirm("Turn the droid portraits off for everyone except Trusted players?")) { box.checked = true; return; }
+			box.disabled = true; $("#art-error").textContent = "";
+			try { await setArtPublic(on); s = await getArtPublic(); toast(on ? "Portraits on for everyone." : "Portraits off, except Trusted players."); }
+			catch (e) { $("#art-error").textContent = e.message; }
+			box.disabled = false; show();
+		});
+	} catch (e) { failed(e); }
+}
+
+// --- Public profiles ---------------------------------------------------------
+
+const TAKE_DOWN_ASK = "Take this profile down?\n\nThe page is deleted at once, and this account cannot publish a new profile until you lift the block here. The player sees a message that the studio took it down.";
+
+async function showProfiles() {
+	view.innerHTML = `<p class="loading">Loading public profiles…</p>`;
+	try {
+		const { rows, blocks, names } = await loadProfiles();
+		const blockedUids = Object.keys(blocks);
+		view.innerHTML = `<div id="pf-wrap">
+			<div class="toolbar">
+				<h1 style="margin:0">Public profiles</h1>
+				<span class="muted small">${rows.length} live${blockedUids.length ? `, ${blockedUids.length} blocked` : ""}</span>
+				<span class="spacer"></span>
+				<button class="btn ghost small" id="reload" type="button">Reload</button>
+			</div>
+			<div class="card table-wrap"><table>
+				<thead><tr><th>Profile name</th><th>Player</th><th>Updated</th><th>Link</th><th></th></tr></thead>
+				<tbody>${rows.map((r) => `<tr data-code="${esc(r.code)}" data-uid="${esc(r.uid)}">
+					<td>${r.name ? esc(r.name) : `<span class="muted small">(name hidden)</span>`}</td>
+					<td>${r.uid ? `<a class="name-link" href="#/player/${encodeURIComponent(r.uid)}">${esc(r.player || "(no save)")}</a>` : `<span class="muted small">no owner</span>`}</td>
+					<td>${esc(localTime(r.updated))}</td>
+					<td class="link-cell"><code>${esc(r.code)}</code>
+						<button class="btn ghost small" data-act="copy" type="button">Copy link</button>
+						<a class="btn ghost small" href="${PROFILE_URL}${encodeURIComponent(r.code)}" target="_blank" rel="noopener">Open</a></td>
+					<td><button class="btn small danger" data-act="down" type="button">Take down</button></td>
+				</tr>`).join("") || `<tr><td colspan="5" class="muted">No public profiles.</td></tr>`}</tbody>
+			</table></div>
+			${blockedUids.length ? `<h2 style="margin-top:24px">Blocked from publishing</h2>
+			<div class="card table-wrap"><table>
+				<thead><tr><th>Player</th><th>Taken down</th><th>Old link code</th><th></th></tr></thead>
+				<tbody>${blockedUids.map((u) => `<tr data-uid="${esc(u)}">
+					<td><a class="name-link" href="#/player/${encodeURIComponent(u)}">${esc(names[u]?.name || "(no save)")}</a></td>
+					<td>${esc(localTime(blocks[u].at))}</td>
+					<td><code>${esc(blocks[u].code || "")}</code></td>
+					<td><button class="btn ghost small" data-act="lift" type="button">Lift block</button></td>
+				</tr>`).join("")}</tbody>
+			</table></div>` : ""}
+			<p class="muted small">"Profile name" is what the page shows (the player may hide it). "Player" is the name in the save. Take down deletes the page and stops this account from publishing again until you lift the block.</p></div>`;
+		$("#reload").addEventListener("click", () => showProfiles());
+		$("#pf-wrap").addEventListener("click", async (e) => {
+			const b = e.target.closest("button[data-act]");
+			if (!b) return;
+			const tr = b.closest("tr"), code = tr.dataset.code, uid = tr.dataset.uid;
+			if (b.dataset.act === "copy") { copyText(PROFILE_URL + code); return; }
+			if (b.dataset.act === "down" && !confirm(TAKE_DOWN_ASK)) return;
+			if (b.dataset.act === "lift" && !confirm("Lift the block? This player can then publish a public profile again.")) return;
+			b.disabled = true;
+			try {
+				if (b.dataset.act === "down") { await takeDownProfile(code, uid); toast("Profile taken down."); }
+				else { await liftBlock(uid); toast("Block lifted."); }
+				showProfiles();
+			} catch (err) { toast(err.message, true); b.disabled = false; }
+		});
+	} catch (e) { failed(e); }
+}
+
 // --- One player ---------------------------------------------------------------
 
 // The same JSON the Bolt Bucket page imports (its export format: state.js toDict).
@@ -410,7 +585,7 @@ async function showPlayer(uid) {
 						<dt>Droids owned</dt><dd>${s.droids}</dd>
 						<dt>Variants owned</dt><dd>${s.variants}</dd>
 						<dt>Rebirth</dt><dd>${s.rebirth}</dd>
-						<dt>Super rebirth</dt><dd>${s.superRebirth}</dd>
+							<dt>Path</dt><dd>${s.path}</dd>
 						<dt>Fusions in progress</dt><dd>${s.inProgress}</dd>
 					</dl>
 					<div class="toolbar" style="margin-top:12px"><button class="btn small" id="backup" type="button">Download backup</button></div>
@@ -425,8 +600,12 @@ async function showPlayer(uid) {
 					<p class="muted small" id="trusted-info"></p>
 					<p class="error" id="trusted-error" role="alert"></p>
 				</div>
-				<div class="card wide">
-					<h2>Save data</h2>
+					<div class="card">
+						<h2>Public profile</h2>
+						<div id="pp-box"><p class="muted small">Loading…</p></div>
+					</div>
+					<div class="card wide">
+						<h2>Save data</h2>
 					<details><summary>Show the whole save (JSON)</summary><pre class="json small">${esc(JSON.stringify(p.state, null, 2))}</pre></details>
 				</div>
 			</div>`;
@@ -440,7 +619,38 @@ async function showPlayer(uid) {
 		};
 		showTrusted();
 
-		$("#backup").addEventListener("click", () => download(`bolt-bucket-backup-${uid}-${new Date().toISOString().slice(0, 10)}.json`, backupText(p)));
+			// Public profile: the owner records with this uid (and an older page that holds the uid), and a block.
+			const drawProfile = async () => {
+				const box = $("#pp-box");
+				try {
+					const { rows, blocks } = await loadProfiles();
+					const mine = rows.filter((r) => r.uid === uid), block = blocks[uid];
+					box.innerHTML = (mine.length ? mine.map((r) => `<p><span class="badge ok">On</span> <code>${esc(r.code)}</code> <span class="muted small">updated ${esc(localTime(r.updated))}</span></p>
+						<div class="toolbar" data-code="${esc(r.code)}"><button class="btn ghost small" data-act="copy" type="button">Copy link</button>
+						<a class="btn ghost small" href="${PROFILE_URL}${encodeURIComponent(r.code)}" target="_blank" rel="noopener">Open</a>
+						<button class="btn small danger" data-act="down" type="button">Take down</button></div>`).join("")
+						: `<p class="muted">No public profile.</p>`)
+						+ (block ? `<p><span class="badge">Blocked</span> <span class="muted small">taken down ${esc(localTime(block.at))} (old code ${esc(block.code || "")})</span></p>
+						<div class="toolbar"><button class="btn ghost small" data-act="lift" type="button">Lift block</button></div>` : "");
+				} catch (err) { box.innerHTML = `<p class="error">${esc(err.message)}</p>`; }
+			};
+			drawProfile();
+			$("#pp-box").addEventListener("click", async (e) => {
+				const b = e.target.closest("button[data-act]");
+				if (!b) return;
+				const code = b.closest("[data-code]")?.dataset.code;
+				if (b.dataset.act === "copy") { copyText(PROFILE_URL + code); return; }
+				if (b.dataset.act === "down" && !confirm(TAKE_DOWN_ASK)) return;
+				if (b.dataset.act === "lift" && !confirm("Lift the block? This player can then publish a public profile again.")) return;
+				b.disabled = true;
+				try {
+					if (b.dataset.act === "down") { await takeDownProfile(code, uid); toast("Profile taken down."); }
+					else { await liftBlock(uid); toast("Block lifted."); }
+					drawProfile();
+				} catch (err) { toast(err.message, true); b.disabled = false; }
+			});
+
+			$("#backup").addEventListener("click", () => download(`bolt-bucket-backup-${uid}-${new Date().toISOString().slice(0, 10)}.json`, backupText(p)));
 
 		$("#rename-form").addEventListener("submit", async (e) => {
 			e.preventDefault();
@@ -465,7 +675,7 @@ async function showPlayer(uid) {
 		$("#trusted").addEventListener("change", async (e) => {
 			const box = e.target, on = box.checked, err = $("#trusted-error");
 			err.textContent = "";
-			if (on && !confirm("Trusted players can see the droid images. Only trust people you know.")) { box.checked = false; return; }
+			if (on && !confirm("Trusted players see the droid portraits even when they are turned off for everyone (Settings). Only trust people you know.")) { box.checked = false; return; }
 			box.disabled = true;
 			try {
 				await setTrusted(uid, on);
