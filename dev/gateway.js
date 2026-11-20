@@ -54,6 +54,16 @@ const GAMES = [
 			return doc?.fields?.enabled?.booleanValue === true;
 		},
 	},
+	{
+		id: "cardgame", name: "Card Game", icon: "/favicon.svg", path: "/dev/cardgame/",
+		apiKey: "AIzaSyALd0GN2PZFLV-FYYML2Snk5PMGN1yk1zk", project: "cardgame-fcg",
+		refreshKey: "cg-dev-refresh", emailKey: "cg-dev-email",
+		need: "an admins/{uid} document with enabled: true",
+		async isDev(uid, tok) {
+			const doc = await fsDoc(this.project, `admins/${uid}`, tok);
+			return doc?.fields?.enabled?.booleanValue === true;
+		},
+	},
 ];
 const EMAIL_KEY = "dev-email";
 // Each game's last result this tab ({id: {ok, text}}), so the picker shows it after a reload.

@@ -176,7 +176,7 @@ at once (each game has its own accounts), each game's own rules decide whether
 that account is a dev there, and a card per game says **Open** or why not ("no
 account with this email and password", "not a dev here yet: needs ..."). Each
 game's session is kept in `sessionStorage` under the keys its panel already
-reads (`ia-dev-*`, `yt-dev-*`, `bk-dev-*`, `sh-dev-*`), so a panel opens signed in. A panel
+reads (`ia-dev-*`, `yt-dev-*`, `bk-dev-*`, `sh-dev-*`, `cg-dev-*`), so a panel opens signed in. A panel
 with no session sends you to `/dev/#<game>` and comes back after sign-in;
 **Sign out** in any panel signs out of all of them; every panel has an
 **All Games** link. For one sign-in to open every game, give your dev account
@@ -262,3 +262,22 @@ the `admins/{uid}` document).
   panel cannot edit a save.
 - Sign in with the **email and password** of the admin account (the same email and password as the other
   games). The `admins/{uid}` document is made in the Firebase console, never by a client.
+
+## Dev panel (`/dev/cardgame/`, Card Game)
+
+A hidden page for the Card Game devs (Firebase project `cardgame-fcg`; "Card Game" is a working name). It shows
+who asked for access to the web Card Editor and lets a dev give or remove access with one click. Not linked from
+anywhere and marked `noindex`; the protection is the Firestore rules, which only allow it for accounts with an
+`admins/{uid}` document with `enabled: true` (CardGame repo). It talks only to Google's Firebase APIs, with the
+dev's own login (REST, no SDK). The `/dev/` gateway opens it (its Card Game card checks `admins/{uid}`).
+
+- **Access requests** (`access_requests/{uid}`): newest first, with name, note, short uid (click to copy) and date.
+  **Give access** creates `editors/{uid}` (`enabled: true`, the name, the server time) and deletes the request in
+  one commit. **Dismiss** deletes the request.
+- **Editors** (`editors/{uid}`): **Disable** / **Enable**, **Remove** and an inline rename (1 to 40 characters).
+- **Drafts inbox** (read-only): counts per kind and the newest 50 drafts. Import them into the game with
+  `node tools/pull_drafts.mjs` in the CardGame repo. Draft art is listed without its `b64` field (a field mask);
+  **Estimate size** reads the images one at a time to add up their size.
+- **One-time setup:** turn on Email/Password sign-in in the `cardgame-fcg` Firebase project. Create a dev login
+  with the same email and password as the other games. Then run `node tools/editors.mjs admin-add <uid>` in the
+  CardGame repo to make that account an admin.

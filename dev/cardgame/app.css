@@ -1,0 +1,8 @@
+/* Card Game dev panel: small additions on top of the shared Pocket Quest panel stylesheet. */
+.stack { display: grid; gap: 16px; }
+.uid code { cursor: pointer; }
+.note-cell { white-space: normal; min-width: 160px; max-width: 360px; overflow-wrap: anywhere; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.rename-row { display: inline-flex; gap: 6px; align-items: center; }
+.rename-row input { width: 160px; }
+.counts { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
