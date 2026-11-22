@@ -50,6 +50,7 @@
 	<li>your Google Play Games player ID or your Game Center player ID. We do not receive your email address, your real name or your password;</li>
 	<li>a profile name built from word lists, and an avatar you pick from a fixed set. You do not type a name;</li>
 	<li>your friend code. It is random, and you can make a new one at any time;</li>
+	<li>a one-time deletion code, which lets you delete your account by email if you no longer have the game;</li>
 	<li>your friend list, the friend requests you sent and received, and the players you blocked;</li>
 	<li>your cards, decks and game progress, saved on our servers;</li>
 	<li>your privacy settings;</li>
@@ -93,7 +94,7 @@
 <p>You can report a player for a bad name, cheating or quitting matches. A report holds your account ID, the other player’s account ID, the reason, the date and the match. A person at our studio reads each report. We can warn, restrict or remove an account after a person has reviewed a report. We do not ban accounts by automatic rules. We do not tell the reported player who sent the report.</p>
 
 <h2>Who we share it with</h2>
-<p>We use Google Firebase (Authentication, Firestore and Cloud Functions) to run accounts, friends and online play. Google acts as our service provider. Your profile, friends and settings, including your online status, are stored in Google’s data centre region in Montreal, Canada (northamerica-northeast1). Firebase Authentication is a global Google service. It may process sign-in data outside Quebec and outside Canada, in places with different privacy rules. Google Play Games and Apple Game Center are run by Google and Apple, under their own privacy policies. Both companies are based in the United States. We assessed the privacy risks before sending data outside Quebec. We may also disclose information if the law requires it.</p>
+<p>We use Google Firebase (Authentication, Firestore and Cloud Functions) to run accounts, friends and online play. Google acts as our service provider. Your profile, friends and settings, including your online status, are stored in Google’s data centre region in Montreal, Canada (northamerica-northeast1). Firebase Authentication runs only in Google data centres in the United States. Your sign-in data (your Firebase ID, your Play Games or Game Center player ID and your IP address) is processed there, where the privacy rules are different from Quebec's. Google Play Games and Apple Game Center are run by Google and Apple, under their own privacy policies. Both companies are based in the United States. We assessed the privacy risks before sending data outside Quebec. We may also disclose information if the law requires it.</p>
 
 <h2>How long we keep it</h2>
 <p>We keep your account information while your account exists. These are the other periods:</p>
@@ -103,7 +104,7 @@
 	<li>Reports: 12 months, even after the reported account is deleted. A report holds only internal account IDs, not profile names.</li>
 	<li>Inactive accounts: no sign-in for 12 months, then we delete them.</li>
 	<li>Online status: we do not keep it. We keep only the latest value while you are online.</li>
-	<li>Deleted accounts: we erase the data within 30 days, backups included.</li>
+	<li>Deleted accounts: we delete the data from our database within 30 days. Google, our service provider, then removes it from its own systems and backups within 180 days. We do not keep our own backups.</li>
 </ul>
 <p>When you delete your account (Settings → Account → Delete Account), we delete your profile, friend code, friend list, requests, blocks, settings, recent opponents and your login link. Your friends no longer see you. Reports you made about others are deleted. Reports made about you stay for up to 12 months, to deal with abuse. They contain no email address and no real name. If you no longer have the game, you can ask us by email. Step by step: <a href="/cardgame/delete-account.html">Delete your account</a>.</p>
 
