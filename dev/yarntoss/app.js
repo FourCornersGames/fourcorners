@@ -62,6 +62,10 @@ function roomLabel(index) {
 }
 
 function fmt(n) { return Number(n || 0).toLocaleString("en-CA"); }
+// A number for HTML, never a player-controlled string: scores/{uid} fields
+// are written by the player, so a string there must not reach innerHTML
+// (security review 2026-11-22, W1).
+function num(v, fallback = 0) { const x = Number(v); return Number.isFinite(x) ? x : fallback; }
 
 function when(iso) {
 	if (!iso) return "";
@@ -372,7 +376,10 @@ async function approvePicture(uid, data) {
 	// The flag on their leaderboard entry (only if they have one: an update
 	// of a missing doc would fail the whole commit). Their Daily entry gets
 	// it from their game's next Daily push.
-	if (await getDoc(`leaderboard/${encodeURIComponent(uid)}`)) {
+	// Not on an unlisted entry ({listed:false, hidden} only, PIA D4): the
+	// picture shows again when the player lists themselves and is approved.
+	const lbDoc = await getDoc(`leaderboard/${encodeURIComponent(uid)}`);
+	if (lbDoc && lbDoc.fields?.listed?.booleanValue !== false) {
 		writes.push({
 			update: { name: docName(`leaderboard/${uid}`), fields: { photo: encode(version) } },
 			updateMask: { fieldPaths: ["photo"] },
@@ -400,7 +407,12 @@ async function denyPicture(uid, review, reason) {
 // their leaderboard entry and this week's Daily entry, so no row asks for it.
 async function removePicture(uid) {
 	await commit([{ delete: docName(`photos/${uid}`) }]);
-	for (const path of [`leaderboard/${uid}`, `daily/${weekKey()}/entries/${uid}`]) {
+	// An unlisted leaderboard entry ({listed:false, hidden}, PIA D4) has no
+	// photo flag to clear, and must not get one.
+	const lbDoc = await getDoc(`leaderboard/${encodeURIComponent(uid)}`);
+	const paths = [`daily/${weekKey()}/entries/${uid}`];
+	if (lbDoc && lbDoc.fields?.listed?.booleanValue !== false) paths.unshift(`leaderboard/${uid}`);
+	for (const path of paths) {
 		try {
 			await fs("PATCH", `${path}?updateMask.fieldPaths=photo&currentDocument.exists=true`, { fields: { photo: encode(0) } });
 		} catch (e) {
@@ -574,8 +586,8 @@ function list(path) {
 function renderPlayer() {
 	const d = P.draft;
 	const o = P.orig;
-	const seq = o.dev_edit_seq || 0;
-	const seen = o.dev_seen_seq || 0;
+	const seq = num(o.dev_edit_seq);
+	const seen = num(o.dev_seen_seq);
 	const changed = new Set(changedPaths());
 	const mark = (...paths) => (paths.some((p) => changed.has(p)) ? "changed" : "");
 	const scrollY = window.scrollY;
@@ -624,14 +636,14 @@ function renderPlayer() {
 				<h2>Progress</h2>
 				<div class="fields">
 					<label for="f-hli">Best room index</label>
-					<div><input id="f-hli" type="number" min="-1" max="3999" data-num="high_level_index" value="${d.high_level_index ?? -1}">
+					<div><input id="f-hli" type="number" min="-1" max="3999" data-num="high_level_index" value="${num(d.high_level_index, -1)}">
 						<span class="hint" id="hli-hint">${esc(roomLabel(d.high_level_index ?? -1))}</span></div>
 					<label for="f-hkc">Kills (that run)</label>
-					<input id="f-hkc" type="number" min="0" max="160000" data-num="high_kill_count" value="${d.high_kill_count ?? 0}">
+					<input id="f-hkc" type="number" min="0" max="160000" data-num="high_kill_count" value="${num(d.high_kill_count)}">
 					<label for="f-hs">High score</label>
-					<input id="f-hs" type="number" min="0" max="1000000" data-num="high_score" value="${d.high_score ?? 0}">
+					<input id="f-hs" type="number" min="0" max="1000000" data-num="high_score" value="${num(d.high_score)}">
 					<label for="f-b">Buttons</label>
-					<input id="f-b" type="number" min="0" data-num="buttons" value="${d.buttons ?? 0}">
+					<input id="f-b" type="number" min="0" data-num="buttons" value="${num(d.buttons)}">
 				</div>
 				<p class="muted small">Room index: −1 = nothing cleared, 0 = Day 1 · Room 1, ${ROOMS_PER_DAY} rooms a day. The leaderboard entry follows these when you save.</p>
 			</section>
@@ -640,7 +652,7 @@ function renderPlayer() {
 				<h2>Savings &amp; Workshop</h2>
 				<div class="fields">
 					<label for="f-sav">Savings</label>
-					<input id="f-sav" type="number" min="0" max="1000000000" data-num="meta.savings" value="${meta.savings ?? 0}">
+					<input id="f-sav" type="number" min="0" max="1000000000" data-num="meta.savings" value="${num(meta.savings)}">
 					${GAME.workshop.map((w) => `
 						<label for="w-${esc(w.id)}" title="${esc(w.description)}">${esc(w.name)}</label>
 						<select id="w-${esc(w.id)}" data-level="${esc(w.id)}">
@@ -731,7 +743,7 @@ function renderPlayer() {
 				${runs.length ? `<div class="table-wrap"><table><thead><tr><th>Room</th><th class="num">Score</th><th class="num">HP</th><th class="num">Gold</th><th>Run</th></tr></thead><tbody>
 					${runs.map((r) => `<tr><td>${esc(roomLabel(r.level_index))}</td><td class="num">${fmt(r.score)}</td><td class="num">${fmt(r.health)}</td><td class="num">${fmt(r.gold)}</td><td class="uid">${esc((r.run_id || "").slice(0, 8))}</td></tr>`).join("")}
 				</tbody></table></div>` : `<p class="muted">No runs in progress.</p>`}
-				<p class="muted small">${(o.ended_run_ids || []).length} finished runs remembered. Runs can't be edited here: the game never swaps a live run under the player.</p>
+				<p class="muted small">${Array.isArray(o.ended_run_ids) ? o.ended_run_ids.length : 0} finished runs remembered. Runs can't be edited here: the game never swaps a live run under the player.</p>
 			</section>
 
 			<section class="card">
@@ -748,7 +760,7 @@ function renderPlayer() {
 				<h2>Account</h2>
 				<div class="fields">
 					<span>Username</span><span>${esc(o.username || "")}</span>
-					<span>Renames</span><span>${o.username_change_count || 0}${o.username_changed_at ? `, last ${esc(when(o.username_changed_at))}` : ""}</span>
+					<span>Renames</span><span>${num(o.username_change_count)}${o.username_changed_at ? `, last ${esc(when(o.username_changed_at))}` : ""}</span>
 					<span>Dev edits</span><span>${seq} made, ${seen} taken in</span>
 					<span>Last sync</span><span>${esc(when(P.updateTime))}</span>
 				</div>
@@ -893,8 +905,9 @@ async function savePlayer() {
 		currentDocument: { updateTime: P.updateTime },
 	}];
 
-	// Keep the public leaderboard entry in step with what changed.
-	if (P.lb) {
+	// Keep the public leaderboard entry in step with what changed. Never on
+	// an unlisted entry: it must hold only `listed` and `hidden` (PIA D4).
+	if (P.lb && P.lb.listed !== false) {
 		const lb = {};
 		if (changed.includes("high_level_index")) lb.high_level_index = d.high_level_index ?? -1;
 		if (changed.includes("high_kill_count")) lb.high_kill_count = d.high_kill_count ?? 0;
