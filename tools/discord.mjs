@@ -188,6 +188,15 @@ async function main(argv) {
 	}
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Node's fetch ignores HTTPS_PROXY unless NODE_USE_ENV_PROXY=1 (Node >= 22.21).
+// Behind a proxy (Claude cloud sessions), re-run ourselves with it set.
+if (import.meta.url === `file://${process.argv[1]}` && process.env.HTTPS_PROXY && !process.env.NODE_USE_ENV_PROXY) {
+	const { spawnSync } = await import('node:child_process');
+	const r = spawnSync(process.execPath, process.argv.slice(1), {
+		stdio: 'inherit',
+		env: { ...process.env, NODE_USE_ENV_PROXY: '1', NODE_NO_WARNINGS: '1' },
+	});
+	process.exit(r.status ?? 1);
+} else if (import.meta.url === `file://${process.argv[1]}`) {
 	main(process.argv.slice(2)).catch((e) => { console.error(e.message); process.exit(1); });
 }
